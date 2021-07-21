@@ -21,7 +21,6 @@ Hi, I'm Bill 😉, a FinTech Engineer 👨🏻‍💻 from Hong Kong. I'm an ope
 
 ### Stats Overview
 <img align="center" src="https://github-readme-stats.vercel.app/api?username=billpwchan&show_icons=true&count_private=true&hide=stars&include_all_commits=false&theme=material-palenight" />
-<img align="center" src="https://github-readme-stats.vercel.app/api/wakatime?username=willianrod" />
 
 
 ### GitHub Highlights:
