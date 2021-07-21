@@ -2,8 +2,7 @@
 
 I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an open-source profession and mostly develop in Python 🐍.
 
-<img align="center" src="https://github-profile-trophy.vercel.app/?username=billpwchan&theme=dracula&no-bg=true&row=1"/>
-
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?vCenter=true&width=500&lines=Technology+Consultant+and+FinTech+Engineer;Python+Developer+with+3%2B+Years+Experience;Passionate+about+Algorithmic+Trading)](https://git.io/typing-svg)
 
 ### How to reach me: 
 <a href="mailto: billpwchan@hotmail.com">
@@ -26,6 +25,8 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 
 ### Stats Overview : :cyclone:
 <img align="center" src="https://github-readme-stats.vercel.app/api?username=billpwchan&show_icons=true&count_private=true&hide=stars&include_all_commits=false&theme=material-palenight" />
+<img align="center" src="https://github-profile-trophy.vercel.app/?username=billpwchan&theme=dracula&no-bg=true&row=1"/>
+
 
 ### GitHub Highlights: :blossom:
 <a href="">
