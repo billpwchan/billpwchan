@@ -1,3 +1,6 @@
+<img src="/github-metrics.svg" alt="Metrics" width="100%">
+
+
 <h1><img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> Hey, Nice to see you.</h1>
 
 I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an open-source profession and mostly develop in Python 🐍.
