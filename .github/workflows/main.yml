@@ -50,7 +50,7 @@ jobs:
           plugin_languages_categories: markup, programming
           plugin_languages_colors: github
           plugin_languages_ignored: html, tcl
-          plugin_languages_limit: 8
+          plugin_languages_limit: 6
           plugin_languages_recent_categories: markup, programming
           plugin_languages_recent_days: 14
           plugin_languages_recent_load: 300
@@ -61,8 +61,6 @@ jobs:
           plugin_people_shuffle: yes
           plugin_people_size: 28
           plugin_people_types: followers, following
-          plugin_projects: yes
-          plugin_projects_limit: 4
           plugin_reactions: yes
           plugin_reactions_display: absolute
           plugin_reactions_limit: 200
