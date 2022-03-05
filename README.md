@@ -4,11 +4,11 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 
 [![Typing SVG](https://readme-typing-svg.herokuapp.com?vCenter=true&width=500&lines=Technology+Consultant+and+FinTech+Engineer;Python+Developer+with+3%2B+Years+Experience;Passionate+about+Algorithmic+Trading)](https://git.io/typing-svg)
 
-### How to reach me: 
+### How to reach me : 
 <a href="mailto: billpwchan@hotmail.com">
 <img src="https://img.shields.io/badge/-billpwchan%40hotmail.com-7B83EB?&style=for-the-badge&logo=Microsoft-outlook&logoColor=white" ></a>  <a  href="https://www.instagram.com/billpwchan/">   <img src="https://img.shields.io/badge/@billpwchan_-%23E4405F.svg?&style=for-the-badge&logo=instagram&logoColor=white"></a>  <a href="https://www.linkedin.com/in/billpwchan1998/"><img src="https://img.shields.io/badge/billpwchan-%230077B5.svg?&style=for-the-badge&logo=linkedin&logoColor=white" ></a>  <a  href="https://www.billpwchan.com/"><img src="https://img.shields.io/badge/billpwchan.com-%2312100E.svg?&style=for-the-badge&logo=safari&logoColor=white"></a>
 
-### Current Status Quo:
+### Current Status Quo :
 
 - 💼 I’m pursuing a <strong>MSc Computing degree in Management and Finance</strong>.
 - 🔭 I’m currently working on <strong>FinTech (NLP and DLT)</strong> and <strong>Algorithmic Trading</strong>
