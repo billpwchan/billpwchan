@@ -1,6 +1,3 @@
-<img src="/github-metrics.svg" alt="Metrics" width="100%">
-
-
 <h1><img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> Hey, Nice to see you.</h1>
 
 I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an open-source profession and mostly develop in Python 🐍.
@@ -27,6 +24,8 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 <img src="https://img.shields.io/badge/tableau%20-%230D597F.svg?&style=for-the-badge&logo=tableau&logoColor=white">   <img src="https://img.shields.io/badge/tensorflow%20-%23FF6F00.svg?&style=for-the-badge&logo=tensorflow&logoColor=white">   <img src="https://img.shields.io/badge/neo4j%20-%23008CC1.svg?&style=for-the-badge&logo=neo4j&logoColor=white">   <img src="https://img.shields.io/badge/mongodb%20-%2347A248svg?&style=for-the-badge&logo=mongodb&logoColor=white">   <img src="https://img.shields.io/badge/git%20-%23F05032.svg?&style=for-the-badge&logo=git&logoColor=white"/>   <img src="http://img.shields.io/badge/-VS%20Code-000000?style=for-the-badge&logo=Visual-studio-code&logoColor=blue"> 
 
 ### Stats Overview : :cyclone:
+<img src="/github-metrics.svg" alt="Metrics" width="100%">
+<!-- 
 <table>
   <tr>
     <td><img align="center" src="https://github-readme-stats.vercel.app/api?username=billpwchan&show_icons=true&count_private=true&hide=stars&include_all_commits=false&theme=material-palenight"/></td>
@@ -43,4 +42,5 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 </table>
   
 ### Github Activity: 🔥 
-<img align="center" src="https://activity-graph.herokuapp.com/graph?username=billpwchan&theme=dracula&color=B994E6&bg_color=2B2D3D" />
+<img align="center" src="https://activity-graph.herokuapp.com/graph?username=billpwchan&theme=dracula&color=B994E6&bg_color=2B2D3D" /> 
+-->
