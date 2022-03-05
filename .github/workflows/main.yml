@@ -49,13 +49,14 @@ jobs:
           plugin_languages_analysis_timeout: 15
           plugin_languages_categories: markup, programming
           plugin_languages_colors: github
-          plugin_languages_ignored: html, tcl
+          plugin_languages_ignored: >-
+            html, css, tex, less, dockerfile, makefile, qmake, lex, cmake, shell,
+            gnuplot, tcl
           plugin_languages_limit: 6
-          plugin_languages_recent_categories: markup, programming
-          plugin_languages_recent_days: 14
-          plugin_languages_recent_load: 300
           plugin_languages_sections: most-used
           plugin_languages_threshold: 0%
+          plugin_languages_details: bytes-size, percentage
+          plugin_languages_indepth: yes
           plugin_people: yes
           plugin_people_limit: 24
           plugin_people_shuffle: yes
@@ -69,10 +70,9 @@ jobs:
           plugin_reactions_limit_issues: 100
           plugin_stargazers: yes
           plugin_stargazers_charts_type: classic
-          plugin_stars: yes
-          plugin_stars_limit: 4
           plugin_stock: yes
+          plugin_stock_token: ${{ secrets.STOCK_TOKEN }}
           plugin_stock_duration: 5d
           plugin_stock_interval: 5m
-          plugin_stock_symbol: MSFT
+          plugin_stock_symbol: ACN
           plugin_traffic: yes
