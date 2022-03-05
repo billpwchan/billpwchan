@@ -1,3 +1,4 @@
+# Visit https://github.com/lowlighter/metrics/blob/master/action.yml for full reference
 name: Metrics
 on:
   # Schedule updates (each hour)
@@ -26,3 +27,24 @@ jobs:
           base: header, activity, community, repositories, metadata
           config_display: columns
           config_timezone: Asia/Hong_Kong
+          plugin_followup: yes
+          plugin_followup_sections: repositories
+          plugin_isocalendar: yes
+          plugin_isocalendar_duration: half-year
+          plugin_languages: yes
+          plugin_languages_analysis_timeout: 15
+          plugin_languages_categories: markup, programming
+          plugin_languages_colors: github
+          plugin_languages_ignored: html, tcl
+          plugin_languages_limit: 8
+          plugin_languages_recent_categories: markup, programming
+          plugin_languages_recent_days: 14
+          plugin_languages_recent_load: 300
+          plugin_languages_sections: most-used
+          plugin_languages_threshold: 0%
+          plugin_stars: yes
+          plugin_stars_limit: 4
+          plugin_stock: yes
+          plugin_stock_duration: 5d
+          plugin_stock_interval: 5m
+          plugin_stock_symbol: ACN
