@@ -23,6 +23,7 @@ jobs:
           base: ""
           plugin_achievements: yes
           plugin_achievements_display: compact
+          plugin_achievements_threshold: C
 
       - name: 🦑 General
         if: ${{ success() || failure() }}
@@ -30,7 +31,7 @@ jobs:
         with:
           filename: asset/general.svg
           token: ${{ secrets.METRICS_TOKEN }}
-          base: header, activity, community, repositories, metadata
+          base: header, activity, community
           plugin_isocalendar: yes
           plugin_isocalendar_duration: half-year
           plugin_languages: yes
@@ -39,7 +40,7 @@ jobs:
           plugin_languages_colors: github
           plugin_languages_ignored: >-
             html, css, tex, less, dockerfile, makefile, qmake, lex, cmake, shell,
-            gnuplot, tcl
+            gnuplot, tcl, jupyter%20notebook
           plugin_languages_limit: 6
           plugin_languages_sections: most-used
           plugin_languages_threshold: 0%
