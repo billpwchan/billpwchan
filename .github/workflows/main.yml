@@ -25,6 +25,9 @@ jobs:
           plugin_achievements_display: compact
           plugin_achievements_threshold: C
           plugin_achievements_limit: 12
+          plugin_reactions: yes
+          plugin_reactions_limit: 100
+          plugin_reactions_details: percentage
 
 
       - name: 🦑 General
@@ -49,9 +52,6 @@ jobs:
           plugin_languages_details: bytes-size, percentage
           plugin_traffic: yes
           plugin_lines: yes
-          plugin_reactions: yes
-          plugin_reactions_limit: 100
-          plugin_reactions_details: percentage
           
       - name: 🦑 Followup
         if: ${{ success() || failure() }}
