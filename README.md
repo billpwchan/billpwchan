@@ -23,12 +23,9 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 
 ### Stats Overview : :cyclone:
 
-<img align="center" src="/github-metrics.svg" alt="Metrics" width="100%">
+[<img align="left" width="390" alt="🦑" src="asset/general.svg">](#)
+[<img align="right" width="390" alt="🦑" src="asset/followup.svg">](#)
 
-
-<img align="center" src="asset/metrics.base.svg" alt="Base" width="100%">
-
-<img align="center" src="asset/metrics.plugin.habits.charts.svg" alt="Coding-Habits" width="100%">
 
 
 <!-- 
