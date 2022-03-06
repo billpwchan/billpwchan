@@ -23,7 +23,8 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 
 ### Stats Overview : :cyclone:
 
-<img align="center" src="/github-metrics.svg" alt="Metrics" width="100%">
+<img align="center" src="asset/metrics.base.svg" alt="Metrics" width="100%">
+
 <!-- 
 <table>
   <tr>
