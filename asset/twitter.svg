@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="121" class="">
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="137" class="">
     <defs>
         <style/>
     </defs>
@@ -23,9 +23,9 @@
                         </div>
                         <div class="tweet">
                             RT
-                            <span class="mention">@business</span>
-                            : Confused about crypto? Here’s a primer.
-                            <div class="date">09:59:54 on 6 Mar 2022</div>
+                            <span class="mention">@TheEconomist</span>
+                            : Russia’s financial woes are not yet as severe as in 1998, when the rouble plunged by 70%
+                            <div class="date">13:01:44 on 6 Mar 2022</div>
                         </div>
                     </section>
                 </div>
