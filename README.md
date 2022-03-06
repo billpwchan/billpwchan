@@ -25,6 +25,7 @@ I'm Bill Chan😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an 
 
 [<img align="left" width="390" alt="🦑" src="asset/general.svg">](#)
 [<img align="right" width="390" alt="🦑" src="asset/followup.svg">](#)
+[<img align="right" width="390" alt="🦑" src="asset/achievements.svg">](#)
 
 
 
