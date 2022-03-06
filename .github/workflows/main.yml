@@ -19,7 +19,7 @@ jobs:
         uses: lowlighter/metrics@latest
         with:
           filename: asset/achievements.svg
-          token: ${{ secrets.TOKEN }}
+          token: ${{ secrets.METRICS_TOKEN }}
           base: ""
           plugin_achievements: yes
           plugin_achievements_display: compact
@@ -29,7 +29,7 @@ jobs:
         uses: lowlighter/metrics@latest
         with:
           filename: asset/general.svg
-          token: ${{ secrets.TOKEN }}
+          token: ${{ secrets.METRICS_TOKEN }}
           base: header, activity, community, repositories, metadata
           plugin_isocalendar: yes
           plugin_isocalendar_duration: half-year
@@ -51,7 +51,7 @@ jobs:
         uses: lowlighter/metrics@latest
         with:
           filename: asset/followup.svg
-          token: ${{ secrets.TOKEN }}
+          token: ${{ secrets.METRICS_TOKEN }}
           base: header, activity, community, repositories, metadata
           plugin_followup: yes
           plugin_followup_sections: repositories
