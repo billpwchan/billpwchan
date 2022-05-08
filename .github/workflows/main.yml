@@ -16,7 +16,7 @@ jobs:
 
       - name: 🦑 Achievements
         if: ${{ success() || failure() }}
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@master
         with:
           filename: asset/achievements.svg
           token: ${{ secrets.METRICS_TOKEN }}
@@ -32,7 +32,7 @@ jobs:
 
       - name: 🦑 General
         if: ${{ success() || failure() }}
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@master
         with:
           filename: asset/general.svg
           token: ${{ secrets.METRICS_TOKEN }}
@@ -55,7 +55,7 @@ jobs:
           
       - name: 🦑 Followup
         if: ${{ success() || failure() }}
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@master
         with:
           filename: asset/followup.svg
           token: ${{ secrets.METRICS_TOKEN }}
@@ -71,7 +71,7 @@ jobs:
           
       - name: 🦑 Community
         if: ${{ success() || failure() }}
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@master
         with:
           filename: asset/community.svg
           token: ${{ secrets.METRICS_TOKEN }}
@@ -84,7 +84,7 @@ jobs:
           
       - name: 🦑 People
         if: ${{ success() || failure() }}
-        uses: lowlighter/metrics@latest
+        uses: lowlighter/metrics@master
         with:
           filename: asset/people.svg
           token: ${{ secrets.METRICS_TOKEN }}
