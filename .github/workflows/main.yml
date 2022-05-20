@@ -81,7 +81,7 @@ jobs:
           plugin_stock: yes
           plugin_stock_token: ${{ secrets.STOCK_TOKEN }}
           plugin_stock_symbol: MS
-          plugin_stock_duration: 1d
+          plugin_stock_duration: 5d
           plugin_stock_interval: 1m
           
       - name: 🦑 People
