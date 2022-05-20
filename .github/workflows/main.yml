@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: 🦑 Achievements
+      - name: 🏆 Achievements - Compact Achievements
         if: ${{ success() || failure() }}
         uses: lowlighter/metrics@master
         with:
@@ -25,6 +25,14 @@ jobs:
           plugin_achievements_display: compact
           plugin_achievements_threshold: C
           plugin_achievements_limit: 12
+          
+      - name: 🎭 Comment reactions - Comment reactions
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/reactions.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""
           plugin_reactions: yes
           plugin_reactions_limit: 100
           plugin_reactions_details: percentage
@@ -33,13 +41,21 @@ jobs:
         if: ${{ success() || failure() }}
         uses: lowlighter/metrics@master
         with:
-          filename: asset/general.svg
+          filename: asset/base.svg
           token: ${{ secrets.METRICS_TOKEN }}
           base: header, activity, community, repositories
-          plugin_isocalendar: yes
-          plugin_isocalendar_duration: half-year
+          plugin_traffic: yes
+          plugin_lines: yes
+
+      - name: 🈷️ Most used languages - Most used
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/languages.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""
           plugin_languages: yes
-          plugin_languages_analysis_timeout: 15
+          plugin_languages_analysis_timeout: 30
           plugin_languages_categories: markup, programming
           plugin_languages_colors: github
           plugin_languages_ignored: >-
@@ -49,10 +65,18 @@ jobs:
           plugin_languages_sections: most-used
           plugin_languages_threshold: 0%
           plugin_languages_details: bytes-size, percentage
-          plugin_traffic: yes
-          plugin_lines: yes
           
-      - name: 🎟️ Follow-up of issues and pull requests - Opened on user's repositories
+      - name: 📅 Isometric commit calendar - Half-year calendar
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/isocalendar.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""
+          plugin_isocalendar: yes
+          plugin_isocalendar_duration: half-year
+          
+      - name: 🎟️ Follow-up of issues and pull requests - Opened on users repositories
         if: ${{ success() || failure() }}
         uses: lowlighter/metrics@master
         with:
