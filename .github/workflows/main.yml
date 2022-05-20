@@ -80,9 +80,9 @@ jobs:
           plugin_stargazers_charts_type: classic
           plugin_stock: yes
           plugin_stock_token: ${{ secrets.STOCK_TOKEN }}
-          plugin_stock_symbol: ACN
-          plugin_stock_duration: 5d
-          plugin_stock_interval: 15m
+          plugin_stock_symbol: MS
+          plugin_stock_duration: 1d
+          plugin_stock_interval: 1m
           
       - name: 🦑 People
         if: ${{ success() || failure() }}
