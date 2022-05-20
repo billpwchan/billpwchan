@@ -97,7 +97,16 @@ jobs:
           plugin_stock_token: ${{ secrets.STOCK_TOKEN }}
           plugin_stock_symbol: MS
           plugin_stock_duration: 5d
-          plugin_stock_interval: 1m
+          plugin_stock_interval: 5m
+          
+      - name: 🥠 Fortune - Fortune
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/fortune.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""        
+          plugin_fortune: yes
           
       - name: 🧑‍🤝‍🧑 People plugin
         if: ${{ success() || failure() }}
@@ -118,6 +127,6 @@ jobs:
           base: ""        
           plugin_tweets: yes
           plugin_tweets_token: ${{ secrets.TWITTER_TOKEN }}
-          plugin_tweets_attachments: yes
+          plugin_tweets_attachments: no
           plugin_tweets_user: billpwchan
-          plugin_tweets_limit: 1
+          plugin_tweets_limit: 2
