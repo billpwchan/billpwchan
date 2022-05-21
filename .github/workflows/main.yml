@@ -153,3 +153,61 @@ jobs:
           plugin_tweets_attachments: no
           plugin_tweets_user: billpwchan
           plugin_tweets_limit: 2
+          
+      - name: 🗂️ Active projects - Project from a repository
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/projects.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""        
+          plugin_projects: yes
+          plugin_projects_limit: 1
+          plugin_projects_repositories: billpwchan/futu_algo/projects/1
+          plugin_projects_descriptions: yes
+          
+      - name: ♐ Code snippet of the day - JavaScript or TypeScript snippet of the day
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/code.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""        
+          plugin_code: yes
+          plugin_code_languages: python, javascript
+          plugin_code_load: 400
+
+      - name: 📰 Recent activity - Recent activity
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/activity.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""        
+          plugin_activity: yes
+          plugin_activity_limit: 5
+          plugin_activity_days: 0
+          plugin_activity_filter: issue, pr, release, fork, review, ref/create
+          
+      - name: 🎩 Notable contributions - Indepth analysis
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/notable.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""        
+          plugin_notable: yes
+          plugin_notable_indepth: yes
+          plugin_notable_repositories: yes        
+          
+      - name: 💕 GitHub Sponsors - Sponsors goal
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/sponsors.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""        
+          plugin_sponsors: yes
+          plugin_sponsors_sections: goal, list
+          plugin_sponsors_past: yes 
+          
