@@ -22,13 +22,16 @@ I'm Bill Chan 😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an
 
 [<img align="left" width="390" alt="🦑" src="asset/base.svg">](#)
 [<img align="right" width="390" alt="🦑" src="asset/fortune.svg">](#)
+[<img align="right" width="390" alt="🦑" src="asset/projects.svg">](#)
+
 [<img align="right" width="390" alt="🦑" src="asset/followup.svg">](#)
 [<img align="right" width="390" alt="🦑" src="asset/languages.svg">](#)
-[<img align="right" width="390" alt="🦑" src="asset/stargazers.svg">](#)
 [<img align="left" width="390" alt="🦑" src="asset/isocalendar.svg">](#)
+[<img align="right" width="390" alt="🦑" src="asset/stargazers.svg">](#)
 
-[<img align="right" width="390" alt="🦑" src="asset/habits.svg">](#)
 [<img align="left" width="390" alt="🦑" src="asset/reactions.svg">](#)
+[<img align="right" width="390" alt="🦑" src="asset/habits.svg">](#)
+
 [<img align="left" width="390" alt="🦑" src="asset/achievements.svg">](#)
 
 
