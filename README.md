@@ -1,8 +1,8 @@
 <h1><img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> <span> Hey, Nice to see you. </span> </h1>
 
-I'm Bill Chan 😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an open-source profession and mostly develop in Python 🐍.
+I'm Bill Chan 😉, product manager 👨🏻‍💻 from Hong Kong. I'm an open-source profession and mostly develop in Python 🐍.
 
-<img src="https://readme-typing-svg.herokuapp.com?vCenter=true&width=500&lines=Technology+Consultant+and+FinTech+Engineer;Python+Developer+with+3%2B+Years+Experience;Passionate+about+Algorithmic+Trading" height="40"/>
+<img src="https://readme-typing-svg.herokuapp.com?vCenter=true&width=500&lines=Product+Manager+and+Algo+Trader;Python+Developer+with+3%2B+Years+Experience;Passionate+about+Crypto+Web3" height="40"/>
 
 <div>
 <a href="mailto: billpwchan@hotmail.com">
@@ -12,8 +12,8 @@ I'm Bill Chan 😉, technology consultant 👨🏻‍💻 from Hong Kong. I'm an
 ### Current Status Quo : 📡
 
 - 💼 I’ve graduated with a <strong>MSc Computing degree in Management and Finance</strong>.
-- 🔭 I’m working on <strong>FinTech (NLP and DLT)</strong> and <strong>Algorithmic Trading</strong>
-- 🌱 I’m currently learning <strong>RegTech</strong> and <strong>Automated Risk Trading</strong>
+- 🔭 I’m working on <strong>Crypto Trading</strong> and <strong>Sustainable Web3</strong>
+- 🌱 I’m currently learning <strong>Agile Methodology</strong> and <strong>DevOps</strong>
 - 🤔 My career interests are with <strong>Crypto Trading, Natural Language Processing</strong>, etc
 - 🔍 I’m looking for career opportunities in the <strong>Quant</strong> or <strong>Banking</strong> industry
 - 👀 See my [Personal Portfolio](https://www.billpwchan.com) to get more info
