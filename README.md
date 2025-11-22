@@ -1,70 +1,95 @@
-<h1><img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> <span> Hey, Nice to see you. </span> </h1>
+# <img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> Bill Chan | Quant Research & Algo Trading
 
-I'm Bill Chan 😉, product manager 👨🏻‍💻 from Hong Kong. I'm an open-source profession and mostly develop in Python 🐍.
+<div align="center">
 
-<img src="https://readme-typing-svg.herokuapp.com?vCenter=true&width=500&lines=Product+Manager+and+Algo+Trader;Python+Developer+with+3%2B+Years+Experience;Passionate+about+Crypto+Web3" height="40"/>
+**Systematic Trading | Web3 Infrastructure | Market Microstructure**
 
-<div>
-<a href="mailto: billpwchan@hotmail.com">
-<img src="https://img.shields.io/badge/-billpwchan%40hotmail.com-7B83EB?&style=for-the-badge&logo=Microsoft-outlook&logoColor=white" ></a>  <a  href="https://www.instagram.com/billpwchan/">   <img src="https://img.shields.io/badge/@billpwchan_-%23E4405F.svg?&style=for-the-badge&logo=instagram&logoColor=white"></a>  <a href="https://www.linkedin.com/in/billpwchan1998/"><img src="https://img.shields.io/badge/billpwchan-%230077B5.svg?&style=for-the-badge&logo=linkedin&logoColor=white" ></a>  <a  href="https://www.billpwchan.com/"><img src="https://img.shields.io/badge/billpwchan.com-%2312100E.svg?&style=for-the-badge&logo=safari&logoColor=white"></a>
+<img src="https://readme-typing-svg.herokuapp.com?vCenter=true&width=600&lines=Quant+Developer+%7C+Algo+Trader+%7C+Web3+PM;MSc+Computing+in+Management+%26+Finance;Building+Systematic+Trading+Systems+%26+DeFi+Analytics" height="40"/>
+
+[![Email](https://img.shields.io/badge/Email-billpwchan@hotmail.com-7B83EB?style=flat-square&logo=Microsoft-outlook)](mailto:billpwchan@hotmail.com)
+[![Portfolio](https://img.shields.io/badge/Portfolio-billpwchan.com-000000?style=flat-square&logo=safari)](https://www.billpwchan.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-billpwchan-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/billpwchan1998/)
+[![Instagram](https://img.shields.io/badge/Instagram-@billpwchan-E4405F?style=flat-square&logo=instagram)](https://www.instagram.com/billpwchan/)
+
 </div>
 
-### Current Status Quo : 📡
+---
 
-- 💼 I’ve graduated with a <strong>MSc Computing degree in Management and Finance</strong>.
-- 🔭 I’m working on <strong>Crypto Trading</strong> and <strong>Sustainable Web3</strong>
-- 🌱 I’m currently learning <strong>Agile Methodology</strong> and <strong>DevOps</strong>
-- 🤔 My career interests are with <strong>Crypto Trading, Natural Language Processing</strong>, etc
-- 🔍 I’m looking for career opportunities in the <strong>Quant</strong> or <strong>Banking</strong> industry
-- 👀 See my [Personal Portfolio](https://www.billpwchan.com) to get more info
+## 🎯 Professional Summary
 
-### Stats Overview : :cyclone:
+Quantitative developer and algorithmic trading specialist with expertise in systematic trading systems, derivatives pricing, and onchain data analytics. Currently focused on building high-performance trading infrastructure and sustainable Web3 protocols. Background in computational finance with strong emphasis on market microstructure, NLP for sentiment analysis, and real-time data engineering pipelines.
 
-[<img align="left" width="390" alt="🦑" src="asset/base.svg">](#)
-[<img align="right" width="390" alt="🦑" src="asset/fortune.svg">](#)
-[<img align="right" width="390" alt="🦑" src="asset/projects.svg">](#)
+**Current Focus:** Crypto derivatives trading | DeFi analytics | Backtesting frameworks | Market data infrastructure
 
-[<img align="right" width="390" alt="🦑" src="asset/followup.svg">](#)
-[<img align="left" width="390" alt="🦑" src="asset/isocalendar.svg">](#)
-[<img align="right" width="390" alt="🦑" src="asset/languages.svg">](#)
+---
 
-[<img align="right" width="390" alt="🦑" src="asset/stargazers.svg">](#)
+## 🛠️ Technical Stack
 
-[<img align="left" width="390" alt="🦑" src="asset/reactions.svg">](#)
-[<img align="right" width="390" alt="🦑" src="asset/habits.svg">](#)
+**Quant & Trading**
+`Python` `NumPy` `Pandas` `TA-Lib` `Backtrader` `QuantLib` `Market Data APIs`
 
-[<img align="left" width="390" alt="🦑" src="asset/achievements.svg">](#)
+**Web3 & Blockchain**
+`Solidity` `EVM` `DeFi Protocols` `Onchain Analytics` `Web3.py` `Ethers.js`
 
-<!-- [<img align="right" width="390" alt="🦑" src="asset/twitter.svg">](#) -->
+**Infrastructure & DevOps**
+`FastAPI` `Docker` `GitHub Actions` `CI/CD` `Data Pipelines` `Time-Series DB`
 
-[<img align="left" width="390" alt="🦑" src="asset/people.svg">](#)
+**Data & Analytics**
+`NLP` `Sentiment Analysis` `Time-Series Analysis` `Statistical Modeling` `Data Visualization`
 
-[<img align="right" width="390" alt="🦑" src="asset/stock.svg">](#)
+---
 
+## 📊 Dynamic Metrics Dashboard
 
+<div align="center">
 
-<!-- ### Tools I work upon : 🛠
+| **Core Metrics** | **Activity & Insights** |
+|:---:|:---:|
+| <img src="asset/base.svg" width="400"/> | <img src="asset/activity.svg" width="400"/> |
+| <img src="asset/languages.svg" width="400"/> | <img src="asset/isocalendar.svg" width="400"/> |
+| <img src="asset/habits.svg" width="400"/> | <img src="asset/achievements.svg" width="400"/> |
+| <img src="asset/projects.svg" width="400"/> | <img src="asset/stock.svg" width="400"/> |
+| <img src="asset/stargazers.svg" width="400"/> | <img src="asset/reactions.svg" width="400"/> |
 
-<img src="https://img.shields.io/badge/Java%20-%23E00033.svg?&style=for-the-badge&logo=java&logoColor=white">   <img src="https://img.shields.io/badge/python%20-%2314354C.svg?&style=for-the-badge&logo=python&logoColor=white">   <img src="https://img.shields.io/badge/c++%20-%2300599C.svg?&style=for-the-badge&logo=c%2B%2B&logoColor=white">   <img src="https://img.shields.io/badge/javascript%20-%23323330.svg?&style=for-the-badge&logo=javascript&logoColor=%23F7DF1E">   <img src="https://img.shields.io/badge/PHP%20-%23777BB4.svg?&style=for-the-badge&logo=php&logoColor=white">   <img src="https://img.shields.io/badge/Angular%20-%23DD0031.svg?&style=for-the-badge&logo=angular&logoColor=white">   
-<img src="https://img.shields.io/badge/tableau%20-%230D597F.svg?&style=for-the-badge&logo=tableau&logoColor=white">   <img src="https://img.shields.io/badge/tensorflow%20-%23FF6F00.svg?&style=for-the-badge&logo=tensorflow&logoColor=white">   <img src="https://img.shields.io/badge/neo4j%20-%23008CC1.svg?&style=for-the-badge&logo=neo4j&logoColor=white">   <img src="https://img.shields.io/badge/mongodb%20-%2347A248svg?&style=for-the-badge&logo=mongodb&logoColor=white">   <img src="https://img.shields.io/badge/git%20-%23F05032.svg?&style=for-the-badge&logo=git&logoColor=white"/>   <img src="http://img.shields.io/badge/-VS%20Code-000000?style=for-the-badge&logo=Visual-studio-code&logoColor=blue">  -->
+</div>
 
+---
 
-<!-- 
-<table>
-  <tr>
-    <td><img align="center" src="https://github-readme-stats.vercel.app/api?username=billpwchan&show_icons=true&count_private=true&hide=stars&include_all_commits=false&theme=material-palenight"/></td>
-    <td><img align="center" src="https://github-profile-trophy.vercel.app/?username=billpwchan&theme=dracula&no-bg=true&row=2&column=3"/></td>
-  </tr>
-</table>
+## 🚀 Featured Projects
 
-### GitHub Highlights: :blossom:
-<table>
-  <tr>
-    <td><img align="center" src="https://github-readme-stats.vercel.app/api/top-langs/?username=billpwchan&langs_count=8&layout=compact&theme=material-palenight&hide=html,Tcl" /></td>
-    <td><img align="center" src="http://github-readme-streak-stats.herokuapp.com?user=billpwchan&theme=material-palenight"/></td>
-  </tr>
-</table>
-  
-### Github Activity: 🔥 
-<img align="center" src="https://activity-graph.herokuapp.com/graph?username=billpwchan&theme=dracula&color=B994E6&bg_color=2B2D3D" /> 
--->
+**Trading Systems & Backtesting**
+- Systematic trading frameworks with multi-asset support
+- Real-time market data processing and signal generation
+- Performance attribution and risk analytics
+
+**Web3 & DeFi Analytics**
+- Onchain data aggregation and visualization
+- Protocol analytics and yield optimization tools
+- Sustainable Web3 infrastructure development
+
+**Data Engineering**
+- High-frequency data pipelines for market microstructure analysis
+- NLP-powered sentiment analysis for crypto markets
+- Time-series databases and real-time dashboards
+
+---
+
+## ⚙️ Automated Updates
+
+This README is automatically updated daily via GitHub Actions (`main.yml`). Metrics include:
+- **GitHub Activity:** Commits, PRs, issues, and repository statistics
+- **Code Analytics:** Language distribution, coding habits, and contribution patterns
+- **Market Data:** Stock prices and trading-related metrics
+- **Social Metrics:** Stargazers, reactions, and community engagement
+
+*Last updated: Auto-refreshed every 24 hours at 01:59 UTC*
+
+---
+
+<div align="center">
+
+**Open to opportunities in Quantitative Trading | Fintech | Web3 Infrastructure**
+
+[![GitHub](https://img.shields.io/github/followers/billpwchan?label=GitHub&style=social)](https://github.com/billpwchan)
+
+</div>
