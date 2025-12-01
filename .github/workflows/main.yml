@@ -80,7 +80,7 @@ jobs:
       # Fixed: Reduced events count and added validation to prevent undefined author errors
       - name: 💡 Coding Habits - Development Patterns
         if: ${{ success() || failure() }}
-        uses: lowlighter/metrics@master
+        uses: lowlighter/metrics@latest
         with:
           filename: asset/habits.svg
           token: ${{ secrets.METRICS_TOKEN }}
@@ -88,25 +88,23 @@ jobs:
           plugin_habits: yes
           plugin_habits_charts: yes
           plugin_habits_facts: no
-          plugin_habits_from: 500
+          plugin_habits_from: 200
           plugin_habits_days: 30
-          plugin_habits_skipped: ""
 
       # Achievements & Milestones
-      # DISABLED: GitHub Classic Projects API deprecated (2024-05-23)
-      # This plugin relies on deprecated Projects (classic) API
-      # Re-enable when metrics plugin updates to use new Projects API
-      # - name: 🏆 Achievements - GitHub Milestones
-      #   if: ${{ success() || failure() }}
-      #   uses: lowlighter/metrics@master
-      #   with:
-      #     filename: asset/achievements.svg
-      #     token: ${{ secrets.METRICS_TOKEN }}
-      #     base: ""
-      #     plugin_achievements: yes
-      #     plugin_achievements_display: compact
-      #     plugin_achievements_threshold: C
-      #     plugin_achievements_limit: 12
+      - name: 🏆 Achievements - GitHub Milestones
+        if: ${{ success() || failure() }}
+        uses: lowlighter/metrics@master
+        with:
+          filename: asset/achievements.svg
+          token: ${{ secrets.METRICS_TOKEN }}
+          base: ""
+          plugin_achievements: yes
+          plugin_achievements_only: >-
+            polyglot, stargazer, sponsor, deployer, member, maintainer, developer,
+            scripter, packager, explorer, infographile, manager
+          plugin_achievements_display: compact
+          plugin_achievements_threshold: X
 
       # Stargazers Growth
       - name: ✨ Stargazers - Repository Growth
