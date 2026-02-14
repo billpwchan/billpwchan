@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: 🗃️ Base Metrics - Core Stats & Activity
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/base.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
 
       - name: 🈷️ Language Distribution - Programming Focus
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/languages.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -55,7 +55,7 @@ jobs:
 
       - name: 📅 Isometric Commit Calendar - Half-Year View
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/isocalendar.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -66,7 +66,7 @@ jobs:
 
       - name: 📰 Recent Activity - Latest Contributions
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/activity.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: 💡 Coding Habits - Development Patterns
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/habits.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -92,7 +92,7 @@ jobs:
 
       - name: 🏆 Achievements - GitHub Milestones
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/achievements.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -104,7 +104,7 @@ jobs:
 
       - name: ✨ Stargazers - Repository Growth
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/stargazers.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -115,7 +115,7 @@ jobs:
 
       - name: 🎭 Comment Reactions - Community Interaction
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/reactions.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -127,7 +127,7 @@ jobs:
 
       - name: 🗂️ Featured Repositories - Top Projects
         if: ${{ always() }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/projects.svg
           token: ${{ env.METRICS_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
 
       - name: 💹 Stock Prices - Market Data
         if: ${{ always() && env.STOCK_TOKEN != '' }}
-        uses: lowlighter/metrics@v3
+        uses: lowlighter/metrics@v3.34
         with:
           filename: asset/stock.svg
           token: ${{ env.METRICS_TOKEN }}
