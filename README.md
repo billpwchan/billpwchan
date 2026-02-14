@@ -76,13 +76,34 @@ Quantitative developer and algorithmic trading specialist with expertise in syst
 
 ## ⚙️ Automated Updates
 
-This README is automatically updated daily via GitHub Actions (`main.yml`). Metrics include:
+This README is automatically updated by GitHub Actions via [`.github/workflows/main.yml`](.github/workflows/main.yml).
+
+**Schedule**
+- Daily: `01:59 UTC`
+- On demand: `workflow_dispatch` (manual run from Actions tab)
+
+**Required Secrets**
+- `METRICS_TOKEN`: recommended to use a classic PAT for best compatibility with `lowlighter/metrics`
+- `STOCK_TOKEN` (optional): required only for `asset/stock.svg`
+
+**Recommended METRICS_TOKEN scopes (classic PAT)**
+- `public_repo`
+- `read:user`
+- `read:org`
+- `repo` (needed if you want broader/private-repo data; otherwise some panels may show `Insufficient token scopes`)
+
+Metrics include:
 - **GitHub Activity:** Commits, PRs, issues, and repository statistics
 - **Code Analytics:** Language distribution, coding habits, and contribution patterns
 - **Market Data:** Stock prices and trading-related metrics
 - **Social Metrics:** Stargazers, reactions, and community engagement
 
-*Last updated: Auto-refreshed every 24 hours at 01:59 UTC*
+**Quick Troubleshooting**
+- `Insufficient token scopes` on `base.svg`: usually caused by token permissions; regenerate `METRICS_TOKEN` with scopes above.
+- `Unexpected error` on specific panels: run workflow manually once after token refresh; if still failing, disable that panel temporarily and re-enable incrementally.
+- Missing `stock.svg`: check `STOCK_TOKEN` exists and is valid.
+
+*Last updated: Auto-refreshed daily at 01:59 UTC*
 
 ---
 
