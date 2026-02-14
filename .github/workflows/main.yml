@@ -21,6 +21,7 @@ jobs:
     env:
       USERNAME: billpwchan
       METRICS_TOKEN: ${{ secrets.METRICS_TOKEN != '' && secrets.METRICS_TOKEN || github.token }}
+      STOCK_TOKEN: ${{ secrets.STOCK_TOKEN }}
     steps:
       - name: 🗃️ Base Metrics - Core Stats & Activity
         if: ${{ always() }}
@@ -137,7 +138,7 @@ jobs:
           plugin_repositories_order: stars
 
       - name: 💹 Stock Prices - Market Data
-        if: ${{ always() && secrets.STOCK_TOKEN != '' }}
+        if: ${{ always() && env.STOCK_TOKEN != '' }}
         uses: lowlighter/metrics@v3
         with:
           filename: asset/stock.svg
@@ -145,7 +146,7 @@ jobs:
           user: ${{ env.USERNAME }}
           base: ""
           plugin_stock: yes
-          plugin_stock_token: ${{ secrets.STOCK_TOKEN }}
+          plugin_stock_token: ${{ env.STOCK_TOKEN }}
           plugin_stock_symbol: MS
           plugin_stock_duration: 5d
           plugin_stock_interval: 5m
