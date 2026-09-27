@@ -1,152 +1,79 @@
-# Licensed under The Unlicense
-# GitHub Metrics Auto-Update Workflow
-# Stable and scope-aware configuration for profile metrics
-
-name: Metrics
+name: Profile Dashboard
 
 on:
   schedule:
-    - cron: "59 1 * * *"
+    - cron: "30 22 * * *"
   workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - scripts/**
+      - .github/workflows/main.yml
+
+permissions:
+  contents: write
 
 concurrency:
-  group: metrics-generation
-  cancel-in-progress: false
+  group: profile-dashboard
+  cancel-in-progress: true
 
 jobs:
-  metrics:
+  cards:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      USERNAME: billpwchan
-      METRICS_TOKEN: ${{ secrets.METRICS_TOKEN != '' && secrets.METRICS_TOKEN || github.token }}
-      STOCK_TOKEN: ${{ secrets.STOCK_TOKEN }}
     steps:
-      - name: 🗃️ Base Metrics - Core Stats & Activity
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
-        with:
-          filename: asset/base.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: header, activity, community, repositories
-          plugin_lines: yes
+      - uses: actions/checkout@v5
 
-      - name: 🈷️ Language Distribution - Programming Focus
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
+      - uses: actions/setup-python@v6
         with:
-          filename: asset/languages.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_languages: yes
-          plugin_languages_analysis_timeout: 30
-          plugin_languages_categories: programming
-          plugin_languages_colors: github
-          plugin_languages_ignored: >-
-            html, css, tex, less, dockerfile, makefile, qmake, lex, cmake, shell,
-            gnuplot, tcl, jupyter%20notebook
-          plugin_languages_limit: 8
-          plugin_languages_sections: most-used
-          plugin_languages_threshold: 0%
-          plugin_languages_details: bytes-size, percentage
+          python-version: "3.12"
 
-      - name: 📅 Isometric Commit Calendar - Half-Year View
-        if: ${{ always() }}
+      - name: Render cards, market watch and README sections
+        env:
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+        run: python scripts/generate.py
+
+      - name: Render isometric calendar
         uses: lowlighter/metrics@v3.34
+        continue-on-error: true
         with:
           filename: asset/isocalendar.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
+          token: ${{ secrets.METRICS_TOKEN }}
+          user: billpwchan
           base: ""
+          output_action: none
           plugin_isocalendar: yes
-          plugin_isocalendar_duration: half-year
+          plugin_isocalendar_duration: full-year
 
-      - name: 📰 Recent Activity - Latest Contributions
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
-        with:
-          filename: asset/activity.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_activity: yes
-          plugin_activity_limit: 6
-          plugin_activity_days: 14
-          plugin_activity_filter: issue, pr
-          plugin_activity_visibility: public
+      - name: Collect isometric calendar
+        run: sudo cp /metrics_renders/asset/isocalendar.svg asset/isocalendar.svg || echo "isocalendar render unavailable, keeping previous"
 
-      - name: 💡 Coding Habits - Development Patterns
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
-        with:
-          filename: asset/habits.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_habits: yes
-          plugin_habits_charts: yes
-          plugin_habits_days: 30
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add asset README.md
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "chore(dashboard): refresh profile metrics [skip ci]"
+          git pull --rebase
+          git push
 
-      - name: 🏆 Achievements - GitHub Milestones
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
+  snake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Platane/snk/svg-only@v3
         with:
-          filename: asset/achievements.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_achievements: yes
-          plugin_achievements_display: compact
-          plugin_achievements_threshold: C
+          github_user_name: billpwchan
+          outputs: |
+            dist/snake-light.svg
+            dist/snake-dark.svg?palette=github-dark
 
-      - name: ✨ Stargazers - Repository Growth
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
+      - uses: crazy-max/ghaction-github-pages@v4
         with:
-          filename: asset/stargazers.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_stargazers: yes
-          plugin_stargazers_charts_type: classic
-
-      - name: 🎭 Comment Reactions - Community Interaction
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
-        with:
-          filename: asset/reactions.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_reactions: yes
-          plugin_reactions_limit: 100
-          plugin_reactions_details: percentage
-
-      - name: 🗂️ Featured Repositories - Top Projects
-        if: ${{ always() }}
-        uses: lowlighter/metrics@v3.34
-        with:
-          filename: asset/projects.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_repositories: yes
-          plugin_repositories_featured: billpwchan/futu_algo
-          plugin_repositories_order: stars
-
-      - name: 💹 Stock Prices - Market Data
-        if: ${{ always() && env.STOCK_TOKEN != '' }}
-        uses: lowlighter/metrics@v3.34
-        with:
-          filename: asset/stock.svg
-          token: ${{ env.METRICS_TOKEN }}
-          user: ${{ env.USERNAME }}
-          base: ""
-          plugin_stock: yes
-          plugin_stock_token: ${{ env.STOCK_TOKEN }}
-          plugin_stock_symbol: MS
-          plugin_stock_duration: 5d
-          plugin_stock_interval: 5m
+          target_branch: output
+          build_dir: dist
+          commit_message: "chore(snake): update contribution snake"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

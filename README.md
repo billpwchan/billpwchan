@@ -1,85 +1,99 @@
-# <img src="https://emojis.slackmojis.com/emojis/images/1531849430/4246/blob-sunglasses.gif?1531849430" width="30"/> Bill Chan | Quant Research & Algo Trading
-
 <div align="center">
 
-**Systematic Trading | Web3 Infrastructure | Market Microstructure**
+<img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=26&duration=3200&pause=900&color=F0B429&center=true&vCenter=true&width=720&height=52&lines=Bill+Chan+%E2%80%94+Quant+Developer;Systematic+Trading+%C2%B7+Market+Microstructure;Tick+Data+%E2%86%92+Signals+%E2%86%92+Execution" alt="Bill Chan — Quant Developer"/>
 
-<img src="https://readme-typing-svg.herokuapp.com?vCenter=true&width=600&lines=Quant+Developer+%7C+Algo+Trader+%7C+Web3+PM;MSc+Computing+in+Management+%26+Finance;Building+Systematic+Trading+Systems+%26+DeFi+Analytics" height="40"/>
+**Quant Research & Algo Trading · Web3 Infrastructure · Hong Kong**
 
-[![Email](https://img.shields.io/badge/Email-billpwchan@hotmail.com-7B83EB?style=flat-square&logo=Microsoft-outlook)](mailto:billpwchan@hotmail.com)
-[![Portfolio](https://img.shields.io/badge/Portfolio-billpwchan.com-000000?style=flat-square&logo=safari)](https://www.billpwchan.com)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-billpwchan-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/billpwchan1998/)
-[![Instagram](https://img.shields.io/badge/Instagram-@billpwchan-E4405F?style=flat-square&logo=instagram)](https://www.instagram.com/billpwchan/)
+[![Portfolio](https://img.shields.io/badge/billpwchan.com-111?style=flat-square&logo=safari&logoColor=white)](https://www.billpwchan.com)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/billpwchan1998/)
+[![Email](https://img.shields.io/badge/billpwchan@hotmail.com-0078D4?style=flat-square&logo=microsoftoutlook&logoColor=white)](mailto:billpwchan@hotmail.com)
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/billpwchan/)
+[![Followers](https://img.shields.io/github/followers/billpwchan?style=flat-square&logo=github&label=followers&color=24292f)](https://github.com/billpwchan?tab=followers)
+[![Stars](https://img.shields.io/github/stars/billpwchan?style=flat-square&logo=github&label=stars&color=24292f&affiliations=OWNER)](https://github.com/billpwchan?tab=repositories&sort=stargazers)
 
 </div>
 
----
+```python
+class BillChan(QuantDeveloper):
+    based_in   = "Hong Kong"
+    education  = "MSc Computing (Management & Finance), Imperial College London"
+    focus      = ["HK/A-share tick-level microstructure", "crypto derivatives", "backtesting & execution infra"]
+    building   = "local-first order-flow research tooling (FastAPI · React/PixiJS · Electron)"
+    open_to    = ["Quant Trading", "Quant Dev", "Fintech / Web3 Infrastructure"]
+```
 
-## 🎯 Professional Summary
+## Featured Work
 
-Quantitative developer and algorithmic trading specialist with expertise in systematic trading systems, derivatives pricing, and onchain data analytics. Currently focused on building high-performance trading infrastructure and sustainable Web3 protocols. Background in computational finance with strong emphasis on market microstructure, NLP for sentiment analysis, and real-time data engineering pipelines.
+<table>
+<tr>
+<td width="50%"><a href="https://github.com/billpwchan/futu_algo"><picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/repo-futu_algo-dark.svg"><img alt="futu_algo" src="asset/generated/repo-futu_algo-light.svg" width="100%"></picture></a></td>
+<td width="50%"><a href="https://github.com/billpwchan/DeepTrust"><picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/repo-DeepTrust-dark.svg"><img alt="DeepTrust" src="asset/generated/repo-DeepTrust-light.svg" width="100%"></picture></a></td>
+</tr>
+<tr>
+<td><a href="https://github.com/billpwchan/strategy_powerbacktest"><picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/repo-strategy_powerbacktest-dark.svg"><img alt="strategy_powerbacktest" src="asset/generated/repo-strategy_powerbacktest-light.svg" width="100%"></picture></a></td>
+<td><a href="https://github.com/billpwchan/futu_tick_downloader"><picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/repo-futu_tick_downloader-dark.svg"><img alt="futu_tick_downloader" src="asset/generated/repo-futu_tick_downloader-light.svg" width="100%"></picture></a></td>
+</tr>
+<tr>
+<td><a href="https://github.com/billpwchan/SlippageSim"><picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/repo-SlippageSim-dark.svg"><img alt="SlippageSim" src="asset/generated/repo-SlippageSim-light.svg" width="100%"></picture></a></td>
+<td><a href="https://github.com/billpwchan/Itarle-Quant-Assessment"><picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/repo-Itarle-Quant-Assessment-dark.svg"><img alt="Itarle-Quant-Assessment" src="asset/generated/repo-Itarle-Quant-Assessment-light.svg" width="100%"></picture></a></td>
+</tr>
+</table>
 
-**Current Focus:** Crypto derivatives trading | DeFi analytics | Backtesting frameworks | Market data infrastructure
+## Market Watch
 
----
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="asset/generated/market-dark.svg">
+  <img alt="Market watchlist" src="asset/generated/market-light.svg" width="100%">
+</picture>
 
-## 🛠️ Technical Stack
+## Tech Stack
 
-**Quant & Trading**
-`Python` `NumPy` `Pandas` `TA-Lib` `Backtrader` `QuantLib` `Market Data APIs`
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=py,cpp,ts,react,fastapi,pytorch,sklearn,postgres,redis,docker,githubactions,electron,solidity,aws,linux&perline=15" alt="Tech stack"/>
+</p>
 
-**Web3 & Blockchain**
-`Solidity` `EVM` `DeFi Protocols` `Onchain Analytics` `Web3.py` `Ethers.js`
+| Domain | Tools |
+|:--|:--|
+| **Quant & Trading** | NumPy · Pandas · Polars · Backtrader · QuantLib · TA-Lib · Futu OpenAPI · CCXT |
+| **Market Data** | Tick / L2 order book capture · time-series DBs · real-time pipelines · replay engines |
+| **Web3** | Solidity · EVM · Web3.py · Ethers.js · on-chain analytics · AMM math |
+| **ML / NLP** | PyTorch · scikit-learn · sentiment models · retrieval-augmented financial QA |
 
-**Infrastructure & DevOps**
-`FastAPI` `Docker` `GitHub Actions` `CI/CD` `Data Pipelines` `Time-Series DB`
+## Dashboard
 
-**Data & Analytics**
-`NLP` `Sentiment Analysis` `Time-Series Analysis` `Statistical Modeling` `Data Visualization`
+<p>
+<picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/stats-dark.svg"><img alt="GitHub stats" src="asset/generated/stats-light.svg" width="49%"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="asset/generated/languages-dark.svg"><img alt="Languages" src="asset/generated/languages-light.svg" width="49%"></picture>
+</p>
 
----
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="asset/generated/activity-dark.svg">
+  <img alt="Commit volume profile" src="asset/generated/activity-light.svg" width="100%">
+</picture>
 
-## 📊 Dynamic Metrics Dashboard
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/billpwchan/billpwchan/output/snake-dark.svg">
+  <img alt="Contribution snake" src="https://raw.githubusercontent.com/billpwchan/billpwchan/output/snake-light.svg" width="100%">
+</picture>
+
+<details>
+<summary><b>Isometric contribution calendar</b></summary>
+<br>
+<img alt="Isometric calendar" src="asset/isocalendar.svg" width="100%">
+</details>
+
+## Recently Active
+
+<!-- RECENT:START -->
+| Repository | What it is | Last push |
+|:--|:--|:--:|
+| [`futu_tick_downloader`](https://github.com/billpwchan/futu_tick_downloader) | 富途牛牛 港股实时分笔数据自动存储解决方案（支持服务器配置24/7运行） | today |
+| [`JChart-Security`](https://github.com/billpwchan/JChart-Security) | Private vulnerability reporting intake for JChart | 1mo ago |
+| [`SlippageSim`](https://github.com/billpwchan/SlippageSim) | Impact/slippage simulation toolkit using L2 orderbook + AMM math. | 5mo ago |
+| [`Futu_TelegramBot`](https://github.com/billpwchan/Futu_TelegramBot) | — | 5mo ago |
+| [`strategy_powerbacktest`](https://github.com/billpwchan/strategy_powerbacktest) | A professional-grade algorithmic trading backtesting framework using Futu OpenAPI. 基於Futu OpenAPI建設的專業回測工具，支持自定義策略編寫 | 1y ago |
+<!-- RECENT:END -->
 
 <div align="center">
-
-| **Core Metrics** | **Activity & Insights** |
-|:---:|:---:|
-| <img src="asset/base.svg" width="400"/> | <img src="asset/activity.svg" width="400"/> |
-| <img src="asset/languages.svg" width="400"/> | <img src="asset/isocalendar.svg" width="400"/> |
-| <img src="asset/habits.svg" width="400"/> | <img src="asset/achievements.svg" width="400"/> |
-| <img src="asset/projects.svg" width="400"/> | <img src="asset/stock.svg" width="400"/> |
-| <img src="asset/stargazers.svg" width="400"/> | <img src="asset/reactions.svg" width="400"/> |
-
-</div>
-
----
-
-## 🚀 Featured Projects
-
-**Trading Systems & Backtesting**
-- Systematic trading frameworks with multi-asset support
-- Real-time market data processing and signal generation
-- Performance attribution and risk analytics
-
-**Web3 & DeFi Analytics**
-- Onchain data aggregation and visualization
-- Protocol analytics and yield optimization tools
-- Sustainable Web3 infrastructure development
-
-**Data Engineering**
-- High-frequency data pipelines for market microstructure analysis
-- NLP-powered sentiment analysis for crypto markets
-- Time-series databases and real-time dashboards
-
-*Last updated: Auto-refreshed daily at 01:59 UTC*
-
----
-
-<div align="center">
-
-**Open to opportunities in Quantitative Trading | Fintech | Web3 Infrastructure**
-
-[![GitHub](https://img.shields.io/github/followers/billpwchan?label=GitHub&style=social)](https://github.com/billpwchan)
-
+<sub>Cards, market data and activity refresh daily via <a href=".github/workflows/main.yml">GitHub Actions</a> · rendered by <a href="scripts/generate.py">scripts/generate.py</a></sub>
 </div>
