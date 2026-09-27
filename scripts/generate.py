@@ -17,6 +17,7 @@ README = ROOT / "README.md"
 HKT = dt.timezone(dt.timedelta(hours=8))
 NOW = dt.datetime.now(dt.timezone.utc)
 
+HIDDEN = {USER, "JChart-Security"}
 FEATURED = ["futu_algo", "DeepTrust", "strategy_powerbacktest", "futu_tick_downloader", "SlippageSim", "Itarle-Quant-Assessment"]
 WATCHLIST = [
     ("BTC-USD", "BTC", "Bitcoin"),
@@ -386,12 +387,12 @@ def repo_card(t, r):
 
 
 def update_readme(repos):
-    recent = sorted((r for r in repos if r["name"] != USER and not r["isArchived"]),
+    recent = sorted((r for r in repos if r["name"] not in HIDDEN and not r["isArchived"]),
                     key=lambda r: r["pushedAt"], reverse=True)[:5]
     rows = ["| Repository | What it is | Last push |", "|:--|:--|:--:|"]
     for r in recent:
         desc = (r["description"] or "—").replace("|", "\\|")
-        rows.append(f'| [`{r["name"]}`]({r["url"]}) | {desc} | {ago(r["pushedAt"])} |')
+        rows.append(f'| [`{r["name"]}`]({r["url"]}) | {desc} | {ago(r["pushedAt"]).replace(" ", "&nbsp;")} |')
     block = "\n".join(rows)
     text = README.read_text()
     new = re.sub(r"(<!-- RECENT:START -->).*?(<!-- RECENT:END -->)", lambda m: f"{m[1]}\n{block}\n{m[2]}", text, flags=re.S)
