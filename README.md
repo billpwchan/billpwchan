@@ -17,8 +17,8 @@
 class BillChan(QuantDeveloper):
     based_in   = "Hong Kong"
     education  = "MSc Computing (Management & Finance), Imperial College London"
-    focus      = ["HK/A-share tick-level microstructure", "crypto derivatives", "backtesting & execution infra"]
-    building   = "local-first order-flow research tooling (FastAPI · React/PixiJS · Electron)"
+    focus      = ["HK/A-share microstructure", "crypto derivatives", "execution infra"]
+    building   = "local-first order-flow research terminal"
     open_to    = ["Quant Trading", "Quant Dev", "Fintech / Web3 Infrastructure"]
 ```
 
@@ -88,10 +88,10 @@ class BillChan(QuantDeveloper):
 | Repository | What it is | Last push |
 |:--|:--|:--:|
 | [`futu_tick_downloader`](https://github.com/billpwchan/futu_tick_downloader) | 富途牛牛 港股实时分笔数据自动存储解决方案（支持服务器配置24/7运行） | today |
-| [`JChart-Security`](https://github.com/billpwchan/JChart-Security) | Private vulnerability reporting intake for JChart | 1mo ago |
-| [`SlippageSim`](https://github.com/billpwchan/SlippageSim) | Impact/slippage simulation toolkit using L2 orderbook + AMM math. | 5mo ago |
-| [`Futu_TelegramBot`](https://github.com/billpwchan/Futu_TelegramBot) | — | 5mo ago |
-| [`strategy_powerbacktest`](https://github.com/billpwchan/strategy_powerbacktest) | A professional-grade algorithmic trading backtesting framework using Futu OpenAPI. 基於Futu OpenAPI建設的專業回測工具，支持自定義策略編寫 | 1y ago |
+| [`SlippageSim`](https://github.com/billpwchan/SlippageSim) | Impact/slippage simulation toolkit using L2 orderbook + AMM math. | 5mo&nbsp;ago |
+| [`Futu_TelegramBot`](https://github.com/billpwchan/Futu_TelegramBot) | — | 5mo&nbsp;ago |
+| [`strategy_powerbacktest`](https://github.com/billpwchan/strategy_powerbacktest) | A professional-grade algorithmic trading backtesting framework using Futu OpenAPI. 基於Futu OpenAPI建設的專業回測工具，支持自定義策略編寫 | 1y&nbsp;ago |
+| [`Strategy-Trading-Scraper`](https://github.com/billpwchan/Strategy-Trading-Scraper) | Web Scraper for Binance Trading Bot Stats and PnL | 2y&nbsp;ago |
 <!-- RECENT:END -->
 
 <div align="center">
