@@ -1,8 +1,11 @@
-name: Profile Dashboard
+name: Profile Terminal
 
+# Hourly: the ticker tape, market sessions, risk monitor and derivatives panel are market data.
+# Renders go to the `output` branch (force-pushed, no history) so master keeps only human commits;
+# the README itself is committed only when its "Recently active" table actually changes.
 on:
   schedule:
-    - cron: "30 22 * * *"
+    - cron: "7 * * * *"
   workflow_dispatch:
   push:
     branches: [master]
@@ -14,66 +17,69 @@ permissions:
   contents: write
 
 concurrency:
-  group: profile-dashboard
-  cancel-in-progress: true
+  group: profile-terminal
+  cancel-in-progress: false
 
 jobs:
-  cards:
+  render:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
+
+      # Start from the last published renders so a failed feed keeps its previous card live.
+      - name: Restore previous renders
+        uses: actions/checkout@v5
+        continue-on-error: true
+        with:
+          ref: output
+          path: dist
+      - run: rm -rf dist/.git && mkdir -p dist
 
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+      - run: pip install -r scripts/requirements.txt
 
-      - name: Render cards, market watch and README sections
+      - name: Render cards
         env:
           GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
-        run: python scripts/generate.py
+        run: python scripts/generate.py dist
 
-      - name: Render isometric calendar
-        uses: lowlighter/metrics@v3.34
+      - name: Validate SVGs
+        run: python scripts/check.py dist
+
+      - name: Render contribution snake
+        uses: Platane/snk/svg-only@v3
         continue-on-error: true
-        with:
-          filename: asset/isocalendar.svg
-          token: ${{ secrets.METRICS_TOKEN }}
-          user: billpwchan
-          base: ""
-          output_action: none
-          plugin_isocalendar: yes
-          plugin_isocalendar_duration: full-year
-
-      - name: Collect isometric calendar
-        run: sudo cp /metrics_renders/asset/isocalendar.svg asset/isocalendar.svg || echo "isocalendar render unavailable, keeping previous"
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add asset README.md
-          if git diff --cached --quiet; then
-            echo "No changes"
-            exit 0
-          fi
-          git commit -m "chore(dashboard): refresh profile metrics [skip ci]"
-          git pull --rebase
-          git push
-
-  snake:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: Platane/snk/svg-only@v3
         with:
           github_user_name: billpwchan
           outputs: |
-            dist/snake-light.svg
-            dist/snake-dark.svg?palette=github-dark
+            dist/snake-light.svg?color_snake=#b86e00&color_dots=#ebedf0,#fde7b0,#f7c35f,#e09a1e,#b86e00
+            dist/snake-dark.svg?palette=github-dark&color_snake=#ffb224&color_dots=#161b22,#3b2a07,#7a5410,#c7861a,#ffb224
 
-      - uses: crazy-max/ghaction-github-pages@v4
+      - name: Publish renders to output branch
+        uses: crazy-max/ghaction-github-pages@v4
         with:
           target_branch: output
           build_dir: dist
-          commit_message: "chore(snake): update contribution snake"
+          keep_history: false
+          jekyll: false
+          commit_message: "chore(render): refresh profile terminal"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit README if the recent table changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo "README unchanged"
+            exit 0
+          fi
+          git commit -m "chore(readme): refresh recently active [skip ci]"
+          git pull --rebase
+          git push
