@@ -34,9 +34,38 @@ WORK = {
                                  zh="港股實時分筆數據自動存儲方案"),
     "strategy_powerbacktest": dict(tag="BACKTESTING", pitch="Backtesting engine with custom strategies",
                                    zh="基於 Futu OpenAPI 的專業回測工具"),
-    "DeepTrust": dict(tag="ML / NLP", pitch="Knowledge retrieval for pricing anomalies",
+    "DeepTrust": dict(tag="ARXIV PAPER", pitch="Knowledge retrieval for pricing anomalies",
                       zh="金融知識檢索與定價異常分析"),
 }
+# Header banners embedded at the top of each project's README (referenced from the output branch).
+BANNERS = {
+    "futu_tick_downloader": dict(kicker="TRADING INFRA · 1 OF 3", visual="ticks",
+                                 pitch="24/7 HK tick capture into SQLite WAL",
+                                 zh="港股逐筆行情採集：佇列、批次寫入、品質報告與日終歸檔",
+                                 tags=["FUTU OPEND", "SQLITE WAL", "SYSTEMD", "TELEGRAM OPS"]),
+    "strategy_powerbacktest": dict(kicker="TRADING INFRA · 2 OF 3", visual="pipeline",
+                                   pitch="Bar-by-bar backtesting on Futu data",
+                                   zh="逐根 K 線回測：佣金與每手股數，完整風險指標",
+                                   tags=["BAR-BY-BAR", "COST-AWARE", "RISK METRICS"],
+                                   steps=[("DATA", ["Futu OpenAPI", "1m to 1d bars", "SQLite cache"]),
+                                          ("SIGNAL", ["MACD, MA cross", "BaseStrategy", "warm-up aware"]),
+                                          ("REPORT", ["Sharpe, Sortino", "max DD, VaR", "win rate, PF"])],
+                                   caption="BARS -> STRATEGY -> FILLS WITH COMMISSION -> METRICS"),
+    "futu_algo": dict(kicker="TRADING INFRA · 3 OF 3", visual="stars",
+                      pitch="Algorithmic trading framework on Futu OpenAPI",
+                      zh="基於富途 OpenAPI 的量化交易程序：數據、篩選、策略、實盤",
+                      tags=["HK EQUITIES", "LIVE TRADING", "STOCK SCREENER"]),
+    "DeepTrust": dict(kicker="RESEARCH · ARXIV 2203.08144", visual="pipeline",
+                      pitch="Explaining extreme pricing anomalies",
+                      zh="以可信的金融知識檢索解釋極端價格異動",
+                      tags=["NLP", "FINBERT", "RELIABILITY", "ARXIV"],
+                      steps=[("DETECT", ["price anomaly", "Refinitiv Eikon", "event window"]),
+                             ("RETRIEVE", ["Twitter stream", "query expansion", "relevance rank"]),
+                             ("VERIFY", ["argument mining", "GPT-text traces", "subjectivity"])],
+                      caption="ANOMALY -> RETRIEVAL -> RELIABILITY ASSESSMENT",
+                      footer="PAPER · ARXIV.ORG/ABS/2203.08144 · Q-FIN.ST, CS.CL, CS.LG"),
+}
+
 # (yahoo symbol, label, shown in risk monitor)
 TAPE = [("BTC-USD", "BTC", True), ("ETH-USD", "ETH", True), ("SOL-USD", "SOL", True), ("^GSPC", "SPX", True),
         ("^NDX", "NDX", True), ("^HSI", "HSI", True), ("GC=F", "GOLD", True), ("^TNX", "US10Y", False), ("CNH=X", "USDCNH", False)]
@@ -154,6 +183,8 @@ def main():
                 r = dict(by_name[name], _ago=f"UPDATED {ago(data.parse_ts(by_name[name]['pushedAt'])).upper()}")
                 stars = guarded(f"stars {name}", data.fetch_stars, name) or []
                 write(f"work-{name}", cards.work_card(r, copy, stars, NOW, i % 2))
+                if name in BANNERS:
+                    write(f"banner-{name}", cards.banner(r, BANNERS[name], stars, NOW))
         times = guarded("commit times", data.fetch_commit_times, user["id"], repos, HKT)
         if times:
             write("activity", cards.activity(times))
