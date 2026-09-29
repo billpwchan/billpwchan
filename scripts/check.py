@@ -3,7 +3,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-EXPECTED = ["hero", "risk", "derivatives", "activity", "recent", "snake", "strip-work", "strip-lab", "strip-flow",
+EXPECTED = ["hero", "regime", "risk", "derivatives", "activity", "recent", "snake", "strip-work", "strip-lab", "strip-flow",
             "work-futu_algo", "work-futu_tick_downloader", "work-strategy_powerbacktest", "work-DeepTrust",
             "key-web", "key-in", "key-mail", "key-ig", "key-gh"]
 
