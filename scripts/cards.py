@@ -7,6 +7,84 @@ from theme import (CW, T, W, chip, esc, fmt_num, fmt_price, label, line_path, si
                    title_bar, tone)
 
 
+SECTIONS = ["DES", "WORK", "LAB", "FLOW"]
+
+
+def tabs(x, y, active):
+    """Screen tabs repeated on every section strip; the active screen is amber and underlined."""
+    out = ""
+    for i, tab in enumerate(SECTIONS):
+        s = f"{i + 1}) {tab}"
+        w = text_width(s, 11.5)
+        on = tab == active
+        out += f'<text x="{x:.1f}" y="{y}" class="m{" b" if on else ""}" font-size="11.5" fill="{T["amber"] if on else T["muted"]}">{s}</text>'
+        if on:
+            out += f'<rect x="{x:.1f}" y="{y + 5}" width="{w:.1f}" height="2" fill="{T["amber"]}"/>'
+        x += w + 20
+    return out
+
+
+def strip(active, status):
+    """Section divider: the terminal switching to another screen."""
+    h = 40
+    b = [chip(16, 10, "BILL <GO>", w=88, size=12)[0], tabs(122, 24.5, active),
+         f'<text x="{W - 18}" y="24.5" class="m" font-size="11" fill="{T["muted"]}" text-anchor="end">{esc(status)}</text>']
+    return svg_doc(W, h, "".join(b), f"Section {SECTIONS.index(active) + 1}: {active}")
+
+
+def keycap(code, title, sub, pos, n, accent=None):
+    """Link key styled like a trading-keyboard key; pos/n decide which sides get a gutter."""
+    w, h, g = W / n, 52, 3
+    inset = (0 if pos == 0 else g, 0 if pos == n - 1 else g)
+    x0 = inset[0]
+    col = accent or T["amber"]
+    cw = text_width(code, 10.5) + 14
+    b = [f'<rect x="{x0 + 12}" y="16" width="{cw:.1f}" height="20" rx="3" fill="{col}"/>'
+         f'<text x="{x0 + 12 + cw / 2:.1f}" y="30" class="m b" font-size="10.5" fill="{T["ink"]}" text-anchor="middle">{esc(code)}</text>'
+         f'<text x="{x0 + 12 + cw + 10:.1f}" y="24" class="m b" font-size="11.5" fill="{T["text"]}">{esc(title)}</text>'
+         f'<text x="{x0 + 12 + cw + 10:.1f}" y="39" class="m" font-size="9.5" fill="{T["muted"]}">{esc(sub)}</text>']
+    return svg_doc(round(w), h, "".join(b), f"{title}: {sub}", inset=inset)
+
+
+def recent(repos, ago):
+    rows = repos[:5]
+    H = 48 + len(rows) * 30 + 14
+    b = [title_bar(W, "RECENT PUSHES", "MOST RECENTLY UPDATED PUBLIC REPOSITORIES")]
+    for i, r in enumerate(rows):
+        y = 64 + i * 30
+        name = r["name"]
+        desc = (r["description"] or "").strip()
+        limit = 76 - len(name)
+        out, width = "", 0.0
+        for ch in desc:
+            cw = 1.0 if ord(ch) > 0x2E80 else CW
+            if width + cw > limit * CW:
+                out = out.rstrip() + "..."
+                break
+            out, width = out + ch, width + cw
+        lang = ((r.get("primaryLanguage") or {}).get("name") or "").upper()
+        b.append(f'<g class="rise" style="animation-delay:{i * 60}ms">'
+                 f'<text x="18" y="{y}" class="m b" font-size="12.5" fill="{T["text"]}">{esc(name)}</text>'
+                 f'<text x="{18 + text_width(name, 12.5) + 14:.1f}" y="{y}" class="m" font-size="11.5" fill="{T["muted"]}">{esc(out)}</text>'
+                 f'<text x="{W - 110}" y="{y}" class="m" font-size="10" fill="{T["cyan"]}" text-anchor="end">{esc(lang)}</text>'
+                 f'<text x="{W - 18}" y="{y}" class="m" font-size="11" fill="{T["amber"]}" text-anchor="end">{esc(ago(r).upper())}</text></g>'
+                 + (f'<line x1="18" y1="{y + 12.5}" x2="{W - 18}" y2="{y + 12.5}" stroke="{T["grid"]}"/>' if i < len(rows) - 1 else ""))
+    return svg_doc(W, H, "\n".join(b), "Recently pushed repositories")
+
+
+def snake_panel(snake_svg):
+    """Wrap Platane/snk output in the terminal frame so it reads as one more panel."""
+    import re
+    inner = snake_svg[snake_svg.index(">", snake_svg.index("<svg")) + 1:snake_svg.rindex("</svg>")]
+    vb = re.search(r'viewBox="([^"]+)"', snake_svg).group(1)
+    vw, vh = [float(v) for v in vb.split()[2:]]
+    ch = (W - 24) * vh / vw
+    H = round(44 + ch + 8)
+    head = title_bar(W, "CONTRIBUTION GRID", "LAST 12 MONTHS · THE SNAKE EATS EVERY ACTIVE DAY")
+    body = head + f'<svg x="12" y="44" width="{W - 24}" height="{ch:.1f}" viewBox="{vb}">{inner}</svg>'
+    return svg_doc(W, H, body, "Contribution grid with snake animation")
+
+
 # ================================================================ hero
 def hero(p):
     H = 344
@@ -22,11 +100,7 @@ def hero(p):
     # function bar
     c, cw = chip(16, 11, "BILL <GO>", w=88, size=12)
     b.append(c)
-    x = 16 + cw + 16
-    for i, tab in enumerate(["DES", "WORK", "LAB", "TAPE"]):
-        s = f"{i + 1}) {tab}"
-        b.append(f'<text x="{x:.1f}" y="25.5" class="m" font-size="11.5" fill="{T["amber"] if i == 0 else T["muted"]}">{s}</text>')
-        x += text_width(s, 11.5) + 18
+    b.append(tabs(16 + cw + 18, 25.5, "DES"))
     right = [(p["stamp"] + "  ", T["muted"])]
     for name, state in p["sessions"]:
         right += [(f"{name} ", T["muted"]), (f"{state}  ", T["up"] if state == "OPEN" else T["amber"] if state == "LUNCH" else T["muted"])]
@@ -118,8 +192,9 @@ def hero(p):
 
 
 # ================================================================ work cards
-def work_card(r, copy, stars, now):
-    w, h = 436, 214
+def work_card(r, copy, stars, now, side):
+    w, h = W // 2, 214
+    inset = (0, 3) if side == 0 else (3, 0)
     lang = (r.get("primaryLanguage") or {}).get("name", "")
     b = [f'<text x="20" y="34" class="m b" font-size="15" fill="{T["amber"]}">{esc(r["name"])}</text>',
          f'<text x="{w - 18}" y="34" class="m" font-size="10" fill="{T["muted"]}" text-anchor="end">{esc(" · ".join(x for x in (lang.upper(), copy["tag"]) if x))}</text>',
@@ -149,7 +224,10 @@ def work_card(r, copy, stars, now):
         b.append(label(x, h - 26, k, size=9) + f'<text x="{x}" y="{h - 10}" class="m b" font-size="12.5" fill="{col}">{esc(v)}</text>')
         x += 92
     b.append(f'<text x="{w - 18}" y="{h - 10}" class="m" font-size="10" fill="{T["muted"]}" text-anchor="end">{esc(r["_ago"])}</text>')
-    return svg_doc(w, h, "\n".join(b), f'{r["name"]}: {copy["pitch"]}')
+    body = "\n".join(b)
+    if side:
+        body = f'<g transform="translate(3,0)">{body}</g>'
+    return svg_doc(w, h, body, f'{r["name"]}: {copy["pitch"]}', inset=inset)
 
 
 # ================================================================ risk monitor
@@ -195,7 +273,7 @@ def risk_monitor(series, crypto, stamp):
     n = len(syms)
     cs = 38 if n <= 7 else 32
     H = max(92 + n * 32 + 40, 86 + n * cs + 48)
-    b = [title_bar(W, "LAB", "CROSS-ASSET RISK MONITOR", f"DAILY CLOSES · AS OF {stamp}")]
+    b = [title_bar(W, "CROSS-ASSET RISK MONITOR", f"DAILY CLOSES · AS OF {stamp}")]
     for x, a, lab in [(18, "start", "ASSET"), (150, "end", "RV 20D"), (230, "end", "RV 60D"), (250, "start", "20D RV WITHIN 6M RANGE"), (500, "end", "6M MAX DD")]:
         b.append(label(x, 66, lab, a))
     b.append(f'<line x1="18" y1="74.5" x2="500" y2="74.5" stroke="{T["line"]}"/>')
@@ -264,7 +342,7 @@ def atm_term_structure(summaries, now):
 def derivatives(vol, perps, stamp):
     """vol: {"BTC": (term, pc), ...} or empty; perps: {"BTC": ctx, ...} or empty."""
     H = 288
-    b = [title_bar(W, "DRV", "CRYPTO DERIVATIVES", f"DERIBIT OPTIONS · HYPERLIQUID PERPS · {stamp}")]
+    b = [title_bar(W, "CRYPTO DERIVATIVES", f"DERIBIT OPTIONS · HYPERLIQUID PERPS · {stamp}")]
     # left: ATM IV term structure
     x0, y0, cw, ch = 50, 100, 420, 128
     b.append(label(18, 62, "ATM IMPLIED VOL TERM STRUCTURE"))
@@ -325,7 +403,7 @@ def derivatives(vol, perps, stamp):
 # ================================================================ commit volume profile
 def activity(times):
     H = 262
-    b = [title_bar(W, "FLOW", "COMMIT VOLUME PROFILE", f"LAST {len(times)} AUTHORED COMMITS · HKT")]
+    b = [title_bar(W, "COMMIT VOLUME PROFILE", f"LAST {len(times)} AUTHORED COMMITS · HKT")]
     hours = Counter(t.hour for t in times)
     weekdays = Counter(t.weekday() for t in times)
     x0, y0, cw, ch = 24, 66, 560, 136
