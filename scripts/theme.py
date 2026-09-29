@@ -65,8 +65,10 @@ def font_css(body):
                    for w in FONTS)
 
 
-def svg_doc(w, h, body, title, css=""):
-    frame = f'<rect x=".5" y=".5" width="{w - 1}" height="{h - 1}" rx="12" fill="{T["bg"]}" stroke="{T["line"]}"/>'
+def svg_doc(w, h, body, title, css="", inset=(0, 0)):
+    """inset=(left, right) leaves transparent gutter so side-by-side tiles meet the same gap as stacked ones."""
+    l, r = inset
+    frame = f'<rect x="{l + .5}" y=".5" width="{w - l - r - 1}" height="{h - 1}" rx="10" fill="{T["bg"]}" stroke="{T["line"]}"/>'
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" '
             f'aria-label="{esc(title)}"><title>{esc(title)}</title>\n<style>\n{font_css(body)}{BASE_CSS}{css}\n</style>\n'
             f"{frame}\n{body}\n</svg>\n")
@@ -78,10 +80,10 @@ def chip(x, y, label, w=None, size=11.5):
             f'<text x="{x + w / 2:.1f}" y="{y + 14.5}" class="m b" font-size="{size}" fill="{T["ink"]}" text-anchor="middle">{esc(label)}</text>'), w
 
 
-def title_bar(w, code, title, right=""):
-    """Terminal function bar: amber mnemonic, title, right-aligned status."""
-    c, cw = chip(16, 14, code)
-    out = c + f'<text x="{16 + cw + 14:.1f}" y="28.5" class="m" font-size="11.5" fill="{T["text"]}">{esc(title)}</text>'
+def title_bar(w, title, right=""):
+    """Panel heading shared by every card: amber marker, amber title, muted right-aligned status."""
+    out = (f'<rect x="18" y="19" width="6" height="11" rx="1" fill="{T["amber"]}"/>'
+           f'<text x="32" y="28.5" class="m b" font-size="11.5" letter-spacing=".6" fill="{T["amber"]}">{esc(title)}</text>')
     if right:
         out += f'<text x="{w - 18}" y="28.5" class="m" font-size="11" fill="{T["muted"]}" text-anchor="end">{esc(right)}</text>'
     return out
