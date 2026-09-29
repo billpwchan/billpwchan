@@ -1,8 +1,8 @@
 name: Profile Terminal
 
 # Hourly: the ticker tape, market sessions, risk monitor and derivatives panel are market data.
-# Renders go to the `output` branch (force-pushed, no history) so master keeps only human commits;
-# the README itself is committed only when its "Recently active" table actually changes.
+# Renders go to the `output` branch (force-pushed, no history); the README is static, so master
+# only ever carries human commits.
 on:
   schedule:
     - cron: "7 * * * *"
@@ -48,17 +48,19 @@ jobs:
           GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
         run: python scripts/generate.py dist
 
-      - name: Validate SVGs
-        run: python scripts/check.py dist
-
       - name: Render contribution snake
         uses: Platane/snk/svg-only@v3
         continue-on-error: true
         with:
           github_user_name: billpwchan
           outputs: |
-            dist/snake-light.svg?color_snake=#b86e00&color_dots=#ebedf0,#fde7b0,#f7c35f,#e09a1e,#b86e00
-            dist/snake-dark.svg?palette=github-dark&color_snake=#ffb224&color_dots=#161b22,#3b2a07,#7a5410,#c7861a,#ffb224
+            dist/snake-raw.svg?palette=github-dark&color_snake=#ffb224&color_dots=#161b22,#3b2a07,#7a5410,#c7861a,#ffb224
+
+      - name: Frame snake as a terminal panel
+        run: python scripts/frame_snake.py dist
+
+      - name: Validate SVGs
+        run: python scripts/check.py dist
 
       - name: Publish renders to output branch
         uses: crazy-max/ghaction-github-pages@v4
@@ -70,16 +72,3 @@ jobs:
           commit_message: "chore(render): refresh profile terminal"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit README if the recent table changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          if git diff --cached --quiet; then
-            echo "README unchanged"
-            exit 0
-          fi
-          git commit -m "chore(readme): refresh recently active [skip ci]"
-          git pull --rebase
-          git push
