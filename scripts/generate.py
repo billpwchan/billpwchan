@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 import cards
 import data
+import theme
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "dist"
@@ -75,10 +76,30 @@ def sessions(now):
         hkex = "LUNCH" if 720 <= hm < 780 else "OPEN"
     nm = ny.hour * 60 + ny.minute
     nyse = "OPEN" if ny.weekday() < 5 and 570 <= nm < 960 else "CLOSED"
-    return [("HKEX", hkex), ("NYSE", nyse)]
+    return [("HKEX", hkex), ("NYSE", nyse), ("CRYPTO", "24/7")]
+
+
+def session_focus(sess, now):
+    """Which instruments lead the tape, and how the LAB strip describes the moment."""
+    state = dict(sess)
+    if state["HKEX"] in ("OPEN", "LUNCH"):
+        return {"HSI", "USDCNH"}, "HONG KONG SESSION LIVE"
+    if state["NYSE"] == "OPEN":
+        return {"SPX", "NDX", "US10Y", "GOLD"}, "US SESSION LIVE"
+    if now.astimezone(HKT).weekday() >= 5 and now.astimezone(ZoneInfo("America/New_York")).weekday() >= 5:
+        return CRYPTO, "WEEKEND · CRYPTO TRADES 24/7"
+    return CRYPTO, "CASH MARKETS CLOSED · CRYPTO 24/7"
+
+
+# Power-on order, top to bottom, in seconds: the page boots like a terminal instead of every tile animating at once.
+BOOT = {"hero": 0, "key-web": .3, "key-in": .38, "key-mail": .46, "key-ig": .54, "key-gh": .62, "strip-work": .75,
+        "work-futu_algo": .85, "work-futu_tick_downloader": .95, "work-strategy_powerbacktest": 1.05, "work-DeepTrust": 1.15,
+        "strip-lab": 1.3, "regime": 1.4, "risk": 1.55, "derivatives": 1.75, "strip-flow": 1.95, "activity": 2.05,
+        "snake": 2.25, "recent": 2.45}
 
 
 def write(name, svg):
+    svg = theme.boot(svg, BOOT.get(name, 0))
     (OUT / f"{name}.svg").write_text(svg)
     print(f"wrote {name}.svg ({len(svg) // 1024} KB)")
 
@@ -111,19 +132,22 @@ def main():
         if s and len(s) >= 2:
             series[short] = s
 
+    sess = sessions(NOW)
+    lead, lab_status = session_focus(sess, NOW)
+
     # hero: needs GitHub; the tape degrades to GitHub stats alone if every market feed is down
     if gh:
         user, repos, days, year, by_name = gh
         tape = []
-        for _, short, _ in TAPE:
+        for _, short, _ in sorted(TAPE, key=lambda t: t[1] not in lead):
             if short in series:
                 vals = list(series[short].values())
                 last = vals[-1]
-                tape.append((short, f"{last:.2f}%" if short == "US10Y" else fmt(last, short), (last / vals[-2] - 1) * 100))
-        tape += [("BILL:GH", f"{sum(year):,} 12M", None),
-                 ("STARS", f"{sum(r['stargazerCount'] for r in repos):,}", None),
-                 ("FORKS", f"{sum(r['forkCount'] for r in repos):,}", None)]
-        write("hero", cards.hero(dict(PROFILE, stamp=stamp, sessions=sessions(NOW), tape=tape, year=year,
+                tape.append((short, f"{last:.2f}%" if short == "US10Y" else fmt(last, short), (last / vals[-2] - 1) * 100, short in lead))
+        tape += [("BILL:GH", f"{sum(year):,} 12M", None, False),
+                 ("STARS", f"{sum(r['stargazerCount'] for r in repos):,}", None, False),
+                 ("FORKS", f"{sum(r['forkCount'] for r in repos):,}", None, False)]
+        write("hero", cards.hero(dict(PROFILE, stamp=stamp, sessions=sess, tape=tape, year=year,
                                       total=sum(c for _, c in days), streak=streak(days))))
         for i, (name, copy) in enumerate(WORK.items()):
             if name in by_name:
@@ -147,7 +171,7 @@ def main():
         langs = " · ".join(STACK)
         write("strip-work", cards.strip("WORK", f"SELECTED PROJECTS · {langs}"))
         write("strip-flow", cards.strip("FLOW", f"HOW I SHIP · {sum(year):,} CONTRIBUTIONS IN 12M"))
-    write("strip-lab", cards.strip("LAB", "LIVE MARKETS · YAHOO · DERIBIT · HYPERLIQUID"))
+    write("strip-lab", cards.strip("LAB", f"{lab_status} · YAHOO · DERIBIT · HYPERLIQUID"))
 
     risk = {short: series[short] for _, short, show in TAPE if show and short in series}
     if len(risk) >= 3:
@@ -162,6 +186,14 @@ def main():
     perps = {k: hl[k] for k in PERPS if k in hl}
     # always rendered: an empty feed shows an explicit "unavailable" state instead of a broken image
     guarded("derivatives", lambda: write("derivatives", cards.derivatives(vol, perps, stamp)))
+
+    if len(risk) >= 3:
+        def render_regime():
+            rows, syms, M, _ = cards.risk_stats(risk, CRYPTO)
+            term = vol.get("BTC", (None,))[0]
+            funding = float(perps["BTC"]["funding"]) * 24 * 365 * 100 if "BTC" in perps else None
+            write("regime", cards.regime(rows, syms, M, CRYPTO, term, funding))
+        guarded("regime", render_regime)
 
 
 def fmt(v, short):
