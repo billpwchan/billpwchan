@@ -1,0 +1,359 @@
+"""Card renderers. Each returns a complete SVG document string."""
+import datetime as dt
+import math
+from collections import Counter
+
+from theme import (CW, T, W, chip, esc, fmt_num, fmt_price, label, line_path, signed, svg_doc, text_width,
+                   title_bar, tone)
+
+
+# ================================================================ hero
+def hero(p):
+    H = 344
+    b = ['<defs><pattern id="scan" width="4" height="3" patternUnits="userSpaceOnUse">'
+         '<rect width="4" height="1" fill="#ffffff" fill-opacity=".018"/></pattern>'
+         '<radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="60%" stop-color="#000" stop-opacity="0"/>'
+         '<stop offset="100%" stop-color="#000" stop-opacity=".45"/></radialGradient>'
+         f'<linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{T["amber"]}" stop-opacity=".28"/>'
+         f'<stop offset="1" stop-color="{T["amber"]}" stop-opacity="0"/></linearGradient>'
+         f'<clipPath id="tapeclip"><rect x="1" y="41" width="{W - 2}" height="30"/></clipPath>'
+         f'<clipPath id="frame"><rect x="1" y="1" width="{W - 2}" height="{H - 2}" rx="11"/></clipPath></defs>']
+
+    # function bar
+    c, cw = chip(16, 11, "BILL <GO>", w=88, size=12)
+    b.append(c)
+    x = 16 + cw + 16
+    for i, tab in enumerate(["DES", "WORK", "LAB", "TAPE"]):
+        s = f"{i + 1}) {tab}"
+        b.append(f'<text x="{x:.1f}" y="25.5" class="m" font-size="11.5" fill="{T["amber"] if i == 0 else T["muted"]}">{s}</text>')
+        x += text_width(s, 11.5) + 18
+    right = [(p["stamp"] + "  ", T["muted"])]
+    for name, state in p["sessions"]:
+        right += [(f"{name} ", T["muted"]), (f"{state}  ", T["up"] if state == "OPEN" else T["amber"] if state == "LUNCH" else T["muted"])]
+    spans = "".join(f'<tspan fill="{col}">{esc(s)}</tspan>' for s, col in right)
+    b.append(f'<text x="{W - 18 + text_width("  ", 11):.1f}" y="25.5" class="m" font-size="11" text-anchor="end" xml:space="preserve">{spans}</text>')
+    b.append(f'<line x1="0" y1="40.5" x2="{W}" y2="40.5" stroke="{T["line"]}"/>'
+             f'<rect x="1" y="41" width="{W - 2}" height="30" fill="{T["panel"]}"/>'
+             f'<line x1="0" y1="71.5" x2="{W}" y2="71.5" stroke="{T["line"]}"/>')
+
+    # ticker tape: one segment repeated, translated by exactly one segment width for a seamless loop
+    fs, seg, x = 12.5, [], 0.0
+    for name, value, change in p["tape"]:
+        for s, col, cls in [(name, T["amber"], "b"), (value, T["text"], "")] + ([(signed(change), tone(change), "")] if change is not None else []):
+            seg.append(f'<tspan x="{x:.1f}" fill="{col}" class="{cls}">{esc(s)}</tspan>')
+            x += (len(s) + 1) * fs * CW
+        seg.append(f'<tspan x="{x:.1f}" fill="{T["line"]}">/</tspan>')
+        x += 3 * fs * CW
+    seg_w = x
+    copies = max(2, math.ceil(W / seg_w) + 1)
+    tape = "".join(f'<text y="61" class="m" font-size="{fs}" transform="translate({k * seg_w:.1f},0)">{"".join(seg)}</text>' for k in range(copies))
+    b.append(f'<g clip-path="url(#tapeclip)"><g class="tape" style="animation-duration:{seg_w / 38:.1f}s"><g transform="translate(16,0)">{tape}</g></g></g>')
+
+    # identity + function-code rows typed out once
+    b.append(f'<text x="32" y="128" class="m b" font-size="38" letter-spacing="1" fill="{T["text"]}">{esc(p["name"])}</text>'
+             f'<text x="34" y="154" class="m" font-size="12.5" letter-spacing="2.2" fill="{T["amber"]}">{esc(p["role"])}</text>')
+    fs, t0, cps = 13.5, 0.4, 0.02
+    for i, (code, val) in enumerate(p["rows"]):
+        y = 188 + i * 28
+        n = len(val)
+        b.append(f'<rect x="32" y="{y - 14}" width="50" height="19" rx="2.5" fill="{T["amber_dim"]}" stroke="{T["amber"]}" stroke-opacity=".55"/>'
+                 f'<text x="57" y="{y}" class="m b" font-size="10.5" fill="{T["amber"]}" text-anchor="middle">{esc(code)}</text>'
+                 f'<text x="96" y="{y}" class="m" font-size="{fs}" fill="{T["text"]}">{esc(val)}</text>'
+                 f'<rect class="ov" x="95" y="{y - fs}" width="{text_width(val, fs) + 3:.1f}" height="{fs * 1.45:.1f}" fill="{T["bg"]}" '
+                 f'style="animation-duration:{n * cps:.2f}s;animation-delay:{t0:.2f}s;animation-timing-function:steps({n})"/>')
+        t0 += n * cps + 0.15
+    ylast = 188 + (len(p["rows"]) - 1) * 28
+    b.append(f'<rect class="cur" x="{96 + text_width(p["rows"][-1][1], fs) + 4:.1f}" y="{ylast - 12}" width="8" height="15" '
+             f'fill="{T["amber"]}" style="animation-delay:{t0:.2f}s"/>')
+
+    # contributions panel
+    px, py, pw, ph = 548, 90, 308, 234
+    year = p["year"]
+    cum, acc = [], 0
+    for v in year:
+        acc += v
+        cum.append(acc)
+    big = f"{cum[-1]:,}"
+    b.append(f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="8" fill="{T["panel"]}" stroke="{T["line"]}"/>'
+             f'<text x="{px + 16}" y="{py + 26}" class="m b" font-size="11.5" fill="{T["amber"]}">BILL:GH</text>'
+             f'<text x="{px + 76}" y="{py + 26}" class="m" font-size="10.5" fill="{T["muted"]}">CONTRIBUTIONS · 52W</text>'
+             f'<text x="{px + 16}" y="{py + 62}" class="m b" font-size="28" fill="{T["text"]}">{big}</text>'
+             f'<text x="{px + 16 + text_width(big, 28) + 10:.1f}" y="{py + 62}" class="m" font-size="11.5" fill="{T["up"]}">12M · {fmt_num(p["total"]).upper()} ALL-TIME</text>')
+    cx0, cy0, cw_, ch = px + 16, py + 80, pw - 60, 96
+    for k in range(4):
+        gy = cy0 + k * ch / 3
+        val = cum[-1] * (1 - k / 3)
+        b.append(f'<line x1="{cx0}" y1="{gy:.1f}" x2="{cx0 + cw_}" y2="{gy:.1f}" stroke="{T["line"]}" stroke-dasharray="2 3"/>'
+                 f'<text x="{px + pw - 12}" y="{gy + 3.5:.1f}" class="m" font-size="9.5" fill="{T["muted"]}" text-anchor="end">'
+                 f'{f"{val / 1000:.1f}k" if val >= 1000 else f"{val:.0f}"}</text>')
+    pts, line = line_path(cum, cx0, cy0, cw_, ch, lo=0, hi=max(cum[-1], 1))
+    b.append(f'<path d="{line} L{cx0 + cw_},{cy0 + ch} L{cx0},{cy0 + ch} Z" fill="url(#area)" class="fadein"/>'
+             f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" stroke-linejoin="round" pathLength="1" class="draw"/>'
+             f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="{T["amber"]}" class="dot"/>'
+             f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="none" stroke="{T["amber"]}" class="ping"/>')
+    vy, vh, vmax, bw = cy0 + ch + 8, 26, max(max(year), 1), cw_ / len(year)
+    bars = "".join(f'<rect x="{cx0 + i * bw:.2f}" y="{vy + vh - v / vmax * vh:.1f}" width="{max(bw - .3, .6):.2f}" height="{v / vmax * vh:.1f}"/>'
+                   for i, v in enumerate(year) if v)
+    b.append(f'<g fill="{T["amber"]}" fill-opacity=".45">{bars}</g>')
+    stats = [("STREAK", f'{p["streak"]}D'), ("ACTIVE", f'{sum(1 for v in year if v)}/{len(year)}'), ("BEST", str(max(year)))]
+    spans = "".join(f'{k} <tspan fill="{T["text"]}">{esc(v)}</tspan>   ' for k, v in stats)
+    b.append(f'<text x="{px + 16}" y="{py + ph - 12}" class="m" font-size="10" fill="{T["muted"]}" xml:space="preserve">{spans.rstrip()}</text>')
+    b.append(f'<rect width="{W}" height="{H}" fill="url(#scan)" clip-path="url(#frame)"/>'
+             f'<rect width="{W}" height="{H}" fill="url(#vig)" clip-path="url(#frame)"/>')
+    css = f"""
+.tape{{animation:tape linear infinite}}
+@keyframes tape{{to{{transform:translateX(-{seg_w:.1f}px)}}}}
+.ov{{transform-box:fill-box;transform-origin:100% 50%;animation-name:type;animation-fill-mode:both}}
+@keyframes type{{from{{transform:scaleX(1)}}to{{transform:scaleX(0)}}}}
+.cur{{opacity:0;animation:cur 1.05s steps(1) infinite}}
+@keyframes cur{{0%{{opacity:1}}50%{{opacity:0}}}}
+.draw{{animation-duration:2.2s}}
+.fadein{{animation-delay:1.2s}}
+.dot{{animation:fade .3s 2.5s both}}
+.ping{{transform-box:fill-box;transform-origin:center;animation:ping 2s 2.6s ease-out infinite backwards}}
+@keyframes ping{{from{{transform:scale(1);opacity:.9}}to{{transform:scale(3.2);opacity:0}}}}
+@media (prefers-reduced-motion:reduce){{.tape,.ping,.dot{{animation:none}}.ov{{display:none}}.cur{{animation:none;opacity:1}}}}
+"""
+    return svg_doc(W, H, "\n".join(b), f'{p["name"]} — {p["role"].title()}', css)
+
+
+# ================================================================ work cards
+def work_card(r, copy, stars, now):
+    w, h = 436, 214
+    lang = (r.get("primaryLanguage") or {}).get("name", "")
+    b = [f'<text x="20" y="34" class="m b" font-size="15" fill="{T["amber"]}">{esc(r["name"])}</text>',
+         f'<text x="{w - 18}" y="34" class="m" font-size="10" fill="{T["muted"]}" text-anchor="end">{esc(" · ".join(x for x in (lang.upper(), copy["tag"]) if x))}</text>',
+         f'<text x="20" y="58" class="m" font-size="12" fill="{T["text"]}">{esc(copy["pitch"])}</text>',
+         f'<text x="20" y="77" class="m" font-size="11.5" fill="{T["muted"]}">{esc(copy["zh"])}</text>']
+    # stars as an equity curve since the first star
+    cx, cy, cw, ch = 20, 100, w - 40, 58
+    b.append(f'<rect x="{cx}" y="{cy}" width="{cw}" height="{ch}" fill="{T["panel"]}" rx="4"/>')
+    year_ago = now.replace(year=now.year - 1)
+    gained = sum(1 for s in stars if s >= year_ago)
+    if len(stars) >= 2:
+        t0, t1 = stars[0].timestamp(), now.timestamp()
+        n = 60
+        buckets = [sum(1 for s in stars if s.timestamp() <= t0 + (t1 - t0) * k / (n - 1)) for k in range(n)]
+        pts, line = line_path(buckets, cx + 6, cy + 8, cw - 12, ch - 16, lo=0, hi=max(buckets[-1], 1))
+        b.append(f'<path d="{line} L{cx + cw - 6},{cy + ch - 8} L{cx + 6},{cy + ch - 8} Z" fill="{T["amber"]}" fill-opacity=".12" class="fadein"/>'
+                 f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.5" pathLength="1" class="draw"/>'
+                 f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="2.6" fill="{T["amber"]}"/>'
+                 + label(cx + 8, cy + ch + 13, str(stars[0].year), size=9)
+                 + label(cx + cw - 2, cy + ch + 13, "NOW", "end", size=9))
+    else:
+        b.append(label(cx + cw / 2, cy + ch / 2 + 3, "STAR HISTORY BUILDING", "middle"))
+    stats = [("STARS", fmt_num(r["stargazerCount"]), T["text"]), ("FORKS", fmt_num(r["forkCount"]), T["text"]),
+             ("STARS 12M", f"+{gained}", T["up"] if gained else T["muted"])]
+    x = 20
+    for k, v, col in stats:
+        b.append(label(x, h - 26, k, size=9) + f'<text x="{x}" y="{h - 10}" class="m b" font-size="12.5" fill="{col}">{esc(v)}</text>')
+        x += 92
+    b.append(f'<text x="{w - 18}" y="{h - 10}" class="m" font-size="10" fill="{T["muted"]}" text-anchor="end">{esc(r["_ago"])}</text>')
+    return svg_doc(w, h, "\n".join(b), f'{r["name"]}: {copy["pitch"]}')
+
+
+# ================================================================ risk monitor
+def _rets(xs):
+    return [math.log(b / a) for a, b in zip(xs, xs[1:]) if a and b]
+
+
+def _std(xs):
+    m = sum(xs) / len(xs)
+    return math.sqrt(sum((x - m) ** 2 for x in xs) / (len(xs) - 1))
+
+
+def _corr(a, b):
+    ma, mb = sum(a) / len(a), sum(b) / len(b)
+    cov = sum((x - ma) * (y - mb) for x, y in zip(a, b))
+    den = math.sqrt(sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b))
+    return cov / den if den else 0.0
+
+
+def risk_stats(series, crypto):
+    rows = []
+    for sym, s in series.items():
+        closes = list(s.values())
+        r = _rets(closes)
+        if len(r) < 25:
+            continue
+        ann = math.sqrt(365 if sym in crypto else 252) * 100
+        roll = [_std(r[i - 20:i]) * ann for i in range(20, len(r) + 1)]
+        peak, mdd = closes[0], 0.0
+        for v in closes:
+            peak = max(peak, v)
+            mdd = min(mdd, v / peak - 1)
+        rows.append(dict(sym=sym, rv20=roll[-1], rv60=_std(r[-60:]) * ann, lo=min(roll), hi=max(roll), mdd=mdd * 100))
+    syms = [row["sym"] for row in rows]
+    common = sorted(set.intersection(*(set(series[s]) for s in syms)))[-61:]
+    R = {s: _rets([series[s][d] for d in common]) for s in syms}
+    M = [[_corr(R[a], R[b]) for b in syms] for a in syms]
+    return rows, syms, M, len(common) - 1
+
+
+def risk_monitor(series, crypto, stamp):
+    rows, syms, M, n_obs = risk_stats(series, crypto)
+    n = len(syms)
+    cs = 38 if n <= 7 else 32
+    H = max(92 + n * 32 + 40, 86 + n * cs + 48)
+    b = [title_bar(W, "LAB", "CROSS-ASSET RISK MONITOR", f"DAILY CLOSES · AS OF {stamp}")]
+    for x, a, lab in [(18, "start", "ASSET"), (150, "end", "RV 20D"), (230, "end", "RV 60D"), (250, "start", "20D RV WITHIN 6M RANGE"), (500, "end", "6M MAX DD")]:
+        b.append(label(x, 66, lab, a))
+    b.append(f'<line x1="18" y1="74.5" x2="500" y2="74.5" stroke="{T["line"]}"/>')
+    for i, r in enumerate(rows):
+        y = 100 + i * 32
+        pos = (r["rv20"] - r["lo"]) / ((r["hi"] - r["lo"]) or 1)
+        b.append(f'<g class="rise" style="animation-delay:{i * 70}ms">'
+                 f'<text x="18" y="{y}" class="m b" font-size="13" fill="{T["text"]}">{esc(r["sym"])}</text>'
+                 f'<text x="150" y="{y}" class="m" font-size="13" fill="{T["text"]}" text-anchor="end">{r["rv20"]:.1f}%</text>'
+                 f'<text x="230" y="{y}" class="m" font-size="13" fill="{T["muted"]}" text-anchor="end">{r["rv60"]:.1f}%</text>'
+                 f'<rect x="250" y="{y - 6}" width="150" height="4" rx="2" fill="{T["line"]}"/>'
+                 f'<rect x="250" y="{y - 6}" width="{max(pos * 150, 3):.1f}" height="4" rx="2" fill="{T["amber"]}" fill-opacity=".55"/>'
+                 f'<rect x="{250 + pos * 150 - 1.5:.1f}" y="{y - 10}" width="3" height="12" rx="1" fill="{T["amber"]}"/>'
+                 + label(250, y + 11, f'{r["lo"]:.0f}%', size=8.5) + label(400, y + 11, f'{r["hi"]:.0f}%', "end", size=8.5) +
+                 f'<text x="500" y="{y}" class="m" font-size="13" fill="{T["down"] if r["mdd"] < 0 else T["muted"]}" text-anchor="end">{r["mdd"]:.1f}%</text></g>')
+    hx = W - 18 - n * cs
+    b.append(label(hx + n * cs / 2, 62, f"CORRELATION · {n_obs}D LOG RETURNS", "middle"))
+    for j, s in enumerate(syms):
+        b.append(label(hx + j * cs + cs / 2, 80, s, "middle", size=9.5) + label(hx - 8, 86 + j * cs + cs / 2 + 3, s, "end", size=9.5))
+    for i in range(n):
+        for j in range(n):
+            v = M[i][j]
+            col = T["amber"] if v >= 0 else T["cyan"]
+            op = .12 + .78 * abs(v) if i != j else .06
+            x, y = hx + j * cs, 86 + i * cs
+            txt = "-" if i == j else f"{v:+.2f}"
+            fill = T["ink"] if abs(v) >= .6 and i != j else T["text"]
+            b.append(f'<g class="rise" style="animation-delay:{(i + j) * 35}ms"><rect x="{x + 2}" y="{y + 2}" width="{cs - 4}" height="{cs - 4}" rx="4" fill="{col}" fill-opacity="{op:.2f}"/>'
+                     f'<text x="{x + cs / 2:.1f}" y="{y + cs / 2 + 3.5:.1f}" class="m" font-size="{10 if cs >= 38 else 9}" fill="{fill}" text-anchor="middle">{txt}</text></g>')
+    crypto_syms = [s for s in syms if s in crypto]
+    eq = [s for s in syms if s in ("SPX", "NDX")]
+    pairs = [M[syms.index(a)][syms.index(e)] for a in crypto_syms for e in eq]
+    note = f"CRYPTO/US EQUITY AVG CORR {sum(pairs) / len(pairs):+.2f}  ·  " if pairs else ""
+    b.append(label(18, H - 16, f"{note}SOURCE: YAHOO FINANCE DAILY CLOSES · REFRESHED HOURLY", size=9.5))
+    return svg_doc(W, H, "\n".join(b), "Cross-asset realized volatility and correlation")
+
+
+# ================================================================ derivatives
+def atm_term_structure(summaries, now):
+    """ATM implied vol per expiry from Deribit option summaries (strike nearest the forward)."""
+    by_exp = {}
+    for s in summaries:
+        try:
+            _, exp, strike, kind = s["instrument_name"].split("-")
+            expiry = dt.datetime.strptime(exp, "%d%b%y").replace(hour=8, tzinfo=dt.timezone.utc)
+        except (ValueError, KeyError):
+            continue
+        if not s.get("mark_iv") or not s.get("underlying_price"):
+            continue
+        by_exp.setdefault(expiry, []).append((float(strike), kind, s["mark_iv"], s["underlying_price"], s.get("open_interest") or 0))
+    out, oi = [], {"C": 0.0, "P": 0.0}
+    for expiry, rows in sorted(by_exp.items()):
+        for _, kind, _, _, o in rows:
+            oi[kind] = oi.get(kind, 0) + o
+        dte = (expiry - now).total_seconds() / 86400
+        if dte < 1:
+            continue
+        fwd = sum(r[3] for r in rows) / len(rows)
+        k = min({r[0] for r in rows}, key=lambda x: abs(x - fwd))
+        ivs = [r[2] for r in rows if r[0] == k]
+        out.append((dte, sum(ivs) / len(ivs), expiry))
+    pc = oi["P"] / oi["C"] if oi["C"] else None
+    return out, pc
+
+
+def derivatives(vol, perps, stamp):
+    """vol: {"BTC": (term, pc), ...} or empty; perps: {"BTC": ctx, ...} or empty."""
+    H = 288
+    b = [title_bar(W, "DRV", "CRYPTO DERIVATIVES", f"DERIBIT OPTIONS · HYPERLIQUID PERPS · {stamp}")]
+    # left: ATM IV term structure
+    x0, y0, cw, ch = 50, 100, 420, 128
+    b.append(label(18, 62, "ATM IMPLIED VOL TERM STRUCTURE"))
+    colors = {"BTC": T["amber"], "ETH": T["cyan"]}
+    curves = {k: v[0] for k, v in vol.items() if v and len(v[0]) >= 2}
+    if curves:
+        all_iv = [iv for c in curves.values() for _, iv, _ in c]
+        step = 5 if max(all_iv) - min(all_iv) <= 20 else 10
+        lo, hi = math.floor(min(all_iv) / step) * step, math.ceil(max(all_iv) / step) * step
+        hi = max(hi, lo + step)
+        maxd = max(d for c in curves.values() for d, _, _ in c)
+        X = lambda d: x0 + math.log1p(d) / math.log1p(maxd) * cw
+        Y = lambda v: y0 + ch - (v - lo) / (hi - lo) * ch
+        for v in range(int(lo), int(hi) + 1, step):
+            b.append(f'<line x1="{x0}" y1="{Y(v):.1f}" x2="{x0 + cw}" y2="{Y(v):.1f}" stroke="{T["line"]}" stroke-dasharray="2 4"/>'
+                     + label(x0 - 8, Y(v) + 3.5, f"{v:.0f}", "end"))
+        for d in (7, 30, 90, 180, 365):
+            if d <= maxd:
+                b.append(label(X(d), y0 + ch + 16, f"{d}D", "middle"))
+        lx = 18
+        for name, curve in curves.items():
+            pts = [(X(d), Y(iv)) for d, iv, _ in curve]
+            path = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+            col = colors.get(name, T["text"])
+            b.append(f'<path d="{path}" fill="none" stroke="{col}" stroke-width="1.8" stroke-linejoin="round" pathLength="1" class="draw"/>')
+            b.append("".join(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.2" fill="{col}" class="fadein"/>' for x, y in pts))
+            front = curve[0][1]
+            pc = vol[name][1]
+            txt = f"{name} {front:.1f}% FRONT" + (f" · P/C OI {pc:.2f}" if pc else "")
+            b.append(f'<rect x="{lx}" y="77" width="10" height="3" fill="{col}"/>' + label(lx + 16, 82, txt, fill=col))
+            lx += text_width(txt, 9.5) + len(txt) * .8 + 40
+    else:
+        b.append(label(x0 + cw / 2, y0 + ch / 2, "OPTIONS FEED UNAVAILABLE THIS HOUR", "middle"))
+    # right: perps
+    tx = 520
+    b.append(label(tx, 62, "PERP FUNDING (APR) · OPEN INTEREST"))
+    cols = [(tx, "start", "PERP"), (tx + 130, "end", "MARK"), (tx + 205, "end", "FUNDING"), (W - 18, "end", "OI (USD)")]
+    for x, a, lab in cols:
+        b.append(label(x, 86, lab, a, size=9))
+    b.append(f'<line x1="{tx}" y1="94.5" x2="{W - 18}" y2="94.5" stroke="{T["line"]}"/>')
+    if perps:
+        for i, (name, c) in enumerate(perps.items()):
+            y = 118 + i * 30
+            mark = float(c["markPx"])
+            apr = float(c["funding"]) * 24 * 365 * 100
+            oi = float(c["openInterest"]) * mark
+            b.append(f'<g class="rise" style="animation-delay:{i * 70}ms">'
+                     f'<text x="{tx}" y="{y}" class="m b" font-size="13" fill="{T["text"]}">{esc(name)}</text>'
+                     f'<text x="{tx + 130}" y="{y}" class="m" font-size="12.5" fill="{T["text"]}" text-anchor="end">{fmt_price(mark)}</text>'
+                     f'<text x="{tx + 205}" y="{y}" class="m" font-size="12.5" fill="{tone(apr)}" text-anchor="end">{signed(apr, 1)}</text>'
+                     f'<text x="{W - 18}" y="{y}" class="m" font-size="12.5" fill="{T["muted"]}" text-anchor="end">{oi / 1e6:,.0f}M</text></g>')
+    else:
+        b.append(label((tx + W - 18) / 2, 160, "PERP FEED UNAVAILABLE THIS HOUR", "middle"))
+    b.append(label(18, H - 16, "ATM = STRIKE NEAREST THE FORWARD, CALL/PUT MARK IV AVERAGED · FUNDING ANNUALIZED FROM THE HOURLY RATE", size=9))
+    return svg_doc(W, H, "\n".join(b), "Crypto options term structure and perpetual funding")
+
+
+# ================================================================ commit volume profile
+def activity(times):
+    H = 262
+    b = [title_bar(W, "FLOW", "COMMIT VOLUME PROFILE", f"LAST {len(times)} AUTHORED COMMITS · HKT")]
+    hours = Counter(t.hour for t in times)
+    weekdays = Counter(t.weekday() for t in times)
+    x0, y0, cw, ch = 24, 66, 560, 136
+    peak = max(hours.values() or [1])
+    bw = cw / 24
+    for a, z, lab in [(9, 12, "HK AM"), (13, 16, "HK PM"), (21, 24, "US OPEN")]:
+        b.append(f'<rect x="{x0 + a * bw:.1f}" y="{y0}" width="{(z - a) * bw:.1f}" height="{ch}" fill="{T["amber"]}" fill-opacity=".06"/>'
+                 + label(x0 + (a + z) / 2 * bw, y0 + 12, lab, "middle", size=8.5, fill=T["amber"]))
+    top = max(range(24), key=lambda hr: hours.get(hr, 0))
+    for hr in range(24):
+        v = hours.get(hr, 0)
+        bh = v / peak * (ch - 22)
+        col = T["amber"] if hr == top else T["up"]
+        b.append(f'<rect class="rise" style="animation-delay:{hr * 25}ms" x="{x0 + hr * bw + 2:.1f}" y="{y0 + ch - bh:.1f}" '
+                 f'width="{bw - 4:.1f}" height="{max(bh, 1):.1f}" rx="1.5" fill="{col}" fill-opacity="{.95 if hr == top else .6}"/>')
+        if hr % 3 == 0:
+            b.append(label(x0 + hr * bw + bw / 2, y0 + ch + 16, f"{hr:02d}", "middle"))
+    b.append(f'<line x1="{x0}" y1="{y0 + ch}" x2="{x0 + cw}" y2="{y0 + ch}" stroke="{T["line"]}"/>' + label(x0, y0 + ch + 36, "HOUR OF DAY"))
+    wx, total = 630, len(times) or 1
+    wpeak = max(weekdays.values() or [1])
+    for i, d in enumerate(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]):
+        y = y0 + 4 + i * 19
+        v = weekdays.get(i, 0)
+        b.append(label(wx, y + 9, d, size=10) +
+                 f'<rect x="{wx + 36}" y="{y}" width="160" height="11" rx="2" fill="{T["grid"]}"/>'
+                 f'<rect class="rise" style="animation-delay:{i * 50}ms" x="{wx + 36}" y="{y}" width="{max(v / wpeak * 160, 1):.1f}" height="11" rx="2" fill="{T["cyan"]}" fill-opacity=".7"/>'
+                 + label(W - 24, y + 9, f"{v / total * 100:.0f}%", "end", size=10))
+    night = sum(hours.get(hr, 0) for hr in (*range(21, 24), *range(0, 5))) / total * 100
+    b.append(f'<text x="{wx}" y="{y0 + ch + 36}" class="m" font-size="10" fill="{T["muted"]}">PEAK <tspan fill="{T["amber"]}">{top:02d}:00</tspan>'
+             f'  ·  AFTER-HOURS <tspan fill="{T["amber"]}">{night:.0f}%</tspan></text>')
+    return svg_doc(W, H, "\n".join(b), "Commit volume profile by hour and weekday")
