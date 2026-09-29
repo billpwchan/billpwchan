@@ -3,7 +3,7 @@ import datetime as dt
 import math
 from collections import Counter
 
-from theme import (CW, T, W, chip, esc, fmt_num, fmt_price, label, line_path, signed, svg_doc, text_width,
+from theme import (CW, T, W, chip, odometer, esc, fmt_num, fmt_price, label, line_path, signed, svg_doc, text_width,
                    title_bar, tone)
 
 
@@ -103,7 +103,8 @@ def hero(p):
     b.append(tabs(16 + cw + 18, 25.5, "DES"))
     right = [(p["stamp"] + "  ", T["muted"])]
     for name, state in p["sessions"]:
-        right += [(f"{name} ", T["muted"]), (f"{state}  ", T["up"] if state == "OPEN" else T["amber"] if state == "LUNCH" else T["muted"])]
+        live = state in ("OPEN", "24/7")
+        right += [(f"{name} ", T["muted"]), (f"{state}  ", T["up"] if live else T["amber"] if state == "LUNCH" else T["muted"])]
     spans = "".join(f'<tspan fill="{col}">{esc(s)}</tspan>' for s, col in right)
     b.append(f'<text x="{W - 18 + text_width("  ", 11):.1f}" y="25.5" class="m" font-size="11" text-anchor="end" xml:space="preserve">{spans}</text>')
     b.append(f'<line x1="0" y1="40.5" x2="{W}" y2="40.5" stroke="{T["line"]}"/>'
@@ -111,16 +112,22 @@ def hero(p):
              f'<line x1="0" y1="71.5" x2="{W}" y2="71.5" stroke="{T["line"]}"/>')
 
     # ticker tape: one segment repeated, translated by exactly one segment width for a seamless loop
-    fs, seg, x = 12.5, [], 0.0
-    for name, value, change in p["tape"]:
-        for s, col, cls in [(name, T["amber"], "b"), (value, T["text"], "")] + ([(signed(change), tone(change), "")] if change is not None else []):
+    fs, seg, pills, x = 12.5, [], [], 0.0
+    for name, value, change, hot in p["tape"]:
+        if hot:
+            pills.append(f'<rect x="{x - 4:.1f}" y="47" width="{text_width(name, fs) + 8:.1f}" height="18" rx="3" fill="{T["amber"]}"/>')
+        parts = [(name, T["ink"] if hot else T["amber"], "b"), (value, T["text"], "")]
+        if change is not None:
+            parts.append((signed(change), tone(change), ""))
+        for s, col, cls in parts:
             seg.append(f'<tspan x="{x:.1f}" fill="{col}" class="{cls}">{esc(s)}</tspan>')
             x += (len(s) + 1) * fs * CW
         seg.append(f'<tspan x="{x:.1f}" fill="{T["line"]}">/</tspan>')
         x += 3 * fs * CW
     seg_w = x
     copies = max(2, math.ceil(W / seg_w) + 1)
-    tape = "".join(f'<text y="61" class="m" font-size="{fs}" transform="translate({k * seg_w:.1f},0)">{"".join(seg)}</text>' for k in range(copies))
+    tape = "".join(f'<g transform="translate({k * seg_w:.1f},0)">{"".join(pills)}<text y="61" class="m" font-size="{fs}">{"".join(seg)}</text></g>'
+                   for k in range(copies))
     b.append(f'<g clip-path="url(#tapeclip)"><g class="tape" style="animation-duration:{seg_w / 38:.1f}s"><g transform="translate(16,0)">{tape}</g></g></g>')
 
     # identity + function-code rows typed out once
@@ -148,10 +155,11 @@ def hero(p):
         acc += v
         cum.append(acc)
     big = f"{cum[-1]:,}"
+    odo_svg, odo_css = odometer(px + 16, py + 62, big, 28, T["text"], delay=0.5)
     b.append(f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="8" fill="{T["panel"]}" stroke="{T["line"]}"/>'
              f'<text x="{px + 16}" y="{py + 26}" class="m b" font-size="11.5" fill="{T["amber"]}">BILL:GH</text>'
              f'<text x="{px + 76}" y="{py + 26}" class="m" font-size="10.5" fill="{T["muted"]}">CONTRIBUTIONS · 52W</text>'
-             f'<text x="{px + 16}" y="{py + 62}" class="m b" font-size="28" fill="{T["text"]}">{big}</text>'
+             + odo_svg +
              f'<text x="{px + 16 + text_width(big, 28) + 10:.1f}" y="{py + 62}" class="m" font-size="11.5" fill="{T["up"]}">12M · {fmt_num(p["total"]).upper()} ALL-TIME</text>')
     cx0, cy0, cw_, ch = px + 16, py + 80, pw - 60, 96
     for k in range(4):
@@ -187,7 +195,7 @@ def hero(p):
 .ping{{transform-box:fill-box;transform-origin:center;animation:ping 2s 2.6s ease-out infinite backwards}}
 @keyframes ping{{from{{transform:scale(1);opacity:.9}}to{{transform:scale(3.2);opacity:0}}}}
 @media (prefers-reduced-motion:reduce){{.tape,.ping,.dot{{animation:none}}.ov{{display:none}}.cur{{animation:none;opacity:1}}}}
-"""
+""" + odo_css
     return svg_doc(W, H, "\n".join(b), f'{p["name"]} — {p["role"].title()}', css)
 
 
@@ -220,14 +228,17 @@ def work_card(r, copy, stars, now, side):
     stats = [("STARS", fmt_num(r["stargazerCount"]), T["text"]), ("FORKS", fmt_num(r["forkCount"]), T["text"]),
              ("STARS 12M", f"+{gained}", T["up"] if gained else T["muted"])]
     x = 20
-    for k, v, col in stats:
-        b.append(label(x, h - 26, k, size=9) + f'<text x="{x}" y="{h - 10}" class="m b" font-size="12.5" fill="{col}">{esc(v)}</text>')
+    css = ""
+    for j, (k, v, col) in enumerate(stats):
+        num, kf = odometer(x, h - 10, v, 12.5, col, delay=0.6 + j * .15)
+        b.append(label(x, h - 26, k, size=9) + num)
+        css += kf
         x += 92
     b.append(f'<text x="{w - 18}" y="{h - 10}" class="m" font-size="10" fill="{T["muted"]}" text-anchor="end">{esc(r["_ago"])}</text>')
     body = "\n".join(b)
     if side:
         body = f'<g transform="translate(3,0)">{body}</g>'
-    return svg_doc(w, h, body, f'{r["name"]}: {copy["pitch"]}', inset=inset)
+    return svg_doc(w, h, body, f'{r["name"]}: {copy["pitch"]}', css, inset=inset)
 
 
 # ================================================================ risk monitor
@@ -260,7 +271,8 @@ def risk_stats(series, crypto):
         for v in closes:
             peak = max(peak, v)
             mdd = min(mdd, v / peak - 1)
-        rows.append(dict(sym=sym, rv20=roll[-1], rv60=_std(r[-60:]) * ann, lo=min(roll), hi=max(roll), mdd=mdd * 100))
+        rows.append(dict(sym=sym, rv20=roll[-1], rv60=_std(r[-60:]) * ann, lo=min(roll), hi=max(roll), mdd=mdd * 100,
+                         dd=(closes[-1] / peak - 1) * 100, pct=(roll[-1] - min(roll)) / ((max(roll) - min(roll)) or 1)))
     syms = [row["sym"] for row in rows]
     common = sorted(set.intersection(*(set(series[s]) for s in syms)))[-61:]
     R = {s: _rets([series[s][d] for d in common]) for s in syms}
@@ -435,3 +447,64 @@ def activity(times):
     b.append(f'<text x="{wx}" y="{y0 + ch + 36}" class="m" font-size="10" fill="{T["muted"]}">PEAK <tspan fill="{T["amber"]}">{top:02d}:00</tspan>'
              f'  ·  AFTER-HOURS <tspan fill="{T["amber"]}">{night:.0f}%</tspan></text>')
     return svg_doc(W, H, "\n".join(b), "Commit volume profile by hour and weekday")
+
+
+# ================================================================ regime monitor
+def _few(names):
+    return ", ".join(names[:2]) + (f" +{len(names) - 2}" if len(names) > 2 else "")
+
+
+def regime(rows, syms, M, crypto, term, funding):
+    """Rule-based state flags: the panel says what the numbers mean, not just what they are."""
+    tiles = []
+    hot = [r["sym"] for r in rows if r["pct"] >= .8]
+    cold = [r["sym"] for r in rows if r["pct"] <= .2]
+    if hot:
+        tiles.append(("VOLATILITY", "ELEVATED", _few(hot) + " NEAR 6M HIGHS", "ALERT"))
+    elif len(cold) >= len(rows) / 2:
+        tiles.append(("VOLATILITY", "COMPRESSED", _few(cold) + " NEAR 6M LOWS", "WATCH"))
+    else:
+        tiles.append(("VOLATILITY", "NORMAL", "20D RV MID-RANGE", "CALM"))
+    pairs = [M[syms.index(a)][syms.index(e)] for a in syms if a in crypto for e in ("SPX", "NDX") if e in syms]
+    if pairs:
+        c = sum(pairs) / len(pairs)
+        state, note = ("ALERT", "RISK-ON COUPLING") if c >= .5 else ("WATCH", "DECOUPLED") if c <= .1 else ("CALM", "TYPICAL RANGE")
+        tiles.append(("CRYPTO / EQUITY", f"{c:+.2f}", note, state))
+    else:
+        tiles.append(("CRYPTO / EQUITY", "N/A", "NO OVERLAP", "OFF"))
+    worst = min(rows, key=lambda r: r["dd"])
+    state = "ALERT" if worst["dd"] <= -15 else "WATCH" if worst["dd"] <= -8 else "CALM"
+    tiles.append(("DRAWDOWN", f'{worst["sym"]} {worst["dd"]:.1f}%', "WORST, FROM 6M HIGH", state))
+    if term and len(term) >= 2:
+        front = term[0][1]
+        mid = min(term, key=lambda t: abs(t[0] - 90))[1]
+        slope = mid - front
+        tiles.append(("BTC VOL CURVE", f"{slope:+.1f} PTS", "INVERTED: EVENT PRICED" if slope < 0 else "CONTANGO, 90D VS FRONT",
+                      "ALERT" if slope < 0 else "CALM"))
+    else:
+        tiles.append(("BTC VOL CURVE", "N/A", "OPTIONS FEED OFFLINE", "OFF"))
+    if funding is not None:
+        state, note = ("ALERT", "LONGS CROWDED") if funding > 25 else ("WATCH", "SHORTS PAYING") if funding < 0 else ("CALM", "NEUTRAL CARRY")
+        tiles.append(("BTC FUNDING APR", signed(funding, 1), note, state))
+    else:
+        tiles.append(("BTC FUNDING APR", "N/A", "PERP FEED OFFLINE", "OFF"))
+
+    H, n = 128, len(tiles)
+    active = sum(1 for t in tiles if t[3] in ("ALERT", "WATCH"))
+    b = [title_bar(W, "REGIME MONITOR", f"RULE-BASED SIGNALS · {active} ACTIVE")]
+    tw = (W - 36) / n
+    for i, (title, value, note, state) in enumerate(tiles):
+        x = 18 + i * tw
+        alert, watch = state == "ALERT", state == "WATCH"
+        stroke = T["amber"] if alert or watch else T["line"]
+        fill = T["amber_dim"] if alert else T["panel"]
+        vcol = T["amber"] if alert else T["text"] if state != "OFF" else T["muted"]
+        b.append(f'<g class="rise" style="animation-delay:{150 + i * 90}ms">'
+                 f'<rect x="{x + 3:.1f}" y="46" width="{tw - 6:.1f}" height="66" rx="6" fill="{fill}" stroke="{stroke}" stroke-opacity="{1 if alert else .6 if watch else 1}"/>'
+                 + label(x + 15, 64, title, size=9)
+                 + f'<text x="{x + 15:.1f}" y="86" class="m b" font-size="15" fill="{vcol}">{esc(value)}</text>'
+                 + label(x + 15, 102, note, size=8.5, fill=T["amber"] if alert or watch else T["muted"]))
+        if alert:
+            b.append(f'<circle cx="{x + tw - 17:.1f}" cy="60" r="3.5" fill="{T["amber"]}" class="live"/>')
+        b.append("</g>")
+    return svg_doc(W, H, "\n".join(b), "Regime monitor: rule-based market state signals")
