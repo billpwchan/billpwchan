@@ -3,8 +3,9 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-EXPECTED = ["hero", "risk", "derivatives", "activity", "work-futu_algo", "work-futu_tick_downloader",
-            "work-strategy_powerbacktest", "work-DeepTrust"]
+EXPECTED = ["hero", "risk", "derivatives", "activity", "recent", "snake", "strip-work", "strip-lab", "strip-flow",
+            "work-futu_algo", "work-futu_tick_downloader", "work-strategy_powerbacktest", "work-DeepTrust",
+            "key-web", "key-in", "key-mail", "key-ig", "key-gh"]
 
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "dist")
 bad = []
