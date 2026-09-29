@@ -30,8 +30,8 @@
 <!-- RECENT:START -->
 | Repository | What it is | Last push |
 |:--|:--|:--:|
-| [`wanxiang-qipu`](https://github.com/billpwchan/wanxiang-qipu) | 王者万象棋 S1 对局助手：按本局禁用给出棋手和路线，对局中逐阶段告诉你买什么、拍卖出多少；附读屏局内副驾。数据来自 18.5 万个顶尖对局终局。 | 1d&nbsp;ago |
-| [`futu_tick_downloader`](https://github.com/billpwchan/futu_tick_downloader) | 富途牛牛 港股实时分笔数据自动存储解决方案（支持服务器配置24/7运行） | 1d&nbsp;ago |
+| [`wanxiang-qipu`](https://github.com/billpwchan/wanxiang-qipu) | 王者万象棋 S1 对局助手：按本局禁用给出棋手和路线，对局中逐阶段告诉你买什么、拍卖出多少；附读屏局内副驾。数据来自 18.5 万个顶尖对局终局。 | 2d&nbsp;ago |
+| [`futu_tick_downloader`](https://github.com/billpwchan/futu_tick_downloader) | 富途牛牛 港股实时分笔数据自动存储解决方案（支持服务器配置24/7运行） | 2d&nbsp;ago |
 | [`strategy_powerbacktest`](https://github.com/billpwchan/strategy_powerbacktest) | A professional-grade algorithmic trading backtesting framework using Futu OpenAPI. 基於Futu OpenAPI建設的專業回測工具，支持自定義策略編寫 | 1y&nbsp;ago |
 | [`Strategy-Trading-Scraper`](https://github.com/billpwchan/Strategy-Trading-Scraper) | Web Scraper for Binance Trading Bot Stats and PnL | 2y&nbsp;ago |
 <!-- RECENT:END -->
