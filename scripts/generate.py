@@ -188,7 +188,9 @@ def main():
         times = guarded("commit times", data.fetch_commit_times, user["id"], repos, HKT)
         if times:
             write("activity", cards.activity(times))
-        visible = sorted((r for r in repos if r["name"] not in HIDDEN and not r["isArchived"]),
+        # the four featured projects already have cards above; this panel shows everything else
+        featured = {n.lower() for n in WORK}
+        visible = sorted((r for r in repos if r["name"] not in HIDDEN and r["name"].lower() not in featured and not r["isArchived"]),
                          key=lambda r: r["pushedAt"], reverse=True)
         write("recent", cards.recent(visible, lambda r: ago(data.parse_ts(r["pushedAt"]))))
         stars_total = sum(r["stargazerCount"] for r in repos)
