@@ -76,8 +76,10 @@ def snake_panel(snake_svg):
     """Wrap Platane/snk output in the terminal frame so it reads as one more panel."""
     import re
     inner = snake_svg[snake_svg.index(">", snake_svg.index("<svg")) + 1:snake_svg.rindex("</svg>")]
-    vb = re.search(r'viewBox="([^"]+)"', snake_svg).group(1)
-    vw, vh = [float(v) for v in vb.split()[2:]]
+    x0, y0, vw, vh = [float(v) for v in re.search(r'viewBox="([^"]+)"', snake_svg).group(1).split()]
+    # keep the grid plus the snake's path around it; drop snk's progress bar and the dead space above it
+    y0, vh = y0 + 12, min(vh, 7 * 16 + 44)
+    vb = f"{x0:g} {y0:g} {vw:g} {vh:g}"
     ch = (W - 24) * vh / vw
     H = round(44 + ch + 8)
     head = title_bar(W, "CONTRIBUTION GRID", "LAST 12 MONTHS · THE SNAKE EATS EVERY ACTIVE DAY")
@@ -319,7 +321,7 @@ def risk_monitor(series, crypto, stamp):
     eq = [s for s in syms if s in ("SPX", "NDX")]
     pairs = [M[syms.index(a)][syms.index(e)] for a in crypto_syms for e in eq]
     note = f"CRYPTO/US EQUITY AVG CORR {sum(pairs) / len(pairs):+.2f}  ·  " if pairs else ""
-    b.append(label(18, H - 16, f"{note}SOURCE: YAHOO FINANCE DAILY CLOSES · REFRESHED HOURLY", size=9.5))
+    b.append(label(18, H - 16, f"{note}SOURCE: YAHOO FINANCE DAILY CLOSES", size=9.5))
     return svg_doc(W, H, "\n".join(b), "Cross-asset realized volatility and correlation")
 
 
