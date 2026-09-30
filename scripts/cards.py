@@ -508,3 +508,115 @@ def regime(rows, syms, M, crypto, term, funding):
             b.append(f'<circle cx="{x + tw - 17:.1f}" cy="60" r="3.5" fill="{T["amber"]}" class="live"/>')
         b.append("</g>")
     return svg_doc(W, H, "\n".join(b), "Regime monitor: rule-based market state signals")
+
+
+# ================================================================ repo banners
+SUITE = ["futu_tick_downloader", "strategy_powerbacktest", "futu_algo"]
+SUITE_LABEL = {"futu_tick_downloader": "TICK CAPTURE", "strategy_powerbacktest": "BACKTEST", "futu_algo": "LIVE TRADING"}
+
+
+def _visual_stars(stars, now, x, y, w, h):
+    if len(stars) < 2:
+        return label(x + w / 2, y + h / 2, "STAR HISTORY BUILDING", "middle")
+    t0, t1, n = stars[0].timestamp(), now.timestamp(), 80
+    buckets = [sum(1 for s in stars if s.timestamp() <= t0 + (t1 - t0) * k / (n - 1)) for k in range(n)]
+    pts, line = line_path(buckets, x, y, w, h, lo=0, hi=max(buckets[-1], 1))
+    return (f'<path d="{line} L{x + w},{y + h} L{x},{y + h} Z" fill="{T["amber"]}" fill-opacity=".12" class="fadein"/>'
+            f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" pathLength="1" class="draw"/>'
+            f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3" fill="{T["amber"]}"/>'
+            + label(x, y + h + 16, f"STARS SINCE {stars[0].year}", size=9) + label(x + w, y + h + 16, f"{len(stars)} TODAY", "end", size=9))
+
+
+def _visual_ticks(x, y, w, h):
+    """A mock tick feed scrolling upward, labelled as such: the real collector output stays private."""
+    rows = [("09:30:00.112", "00700", "381.20", "500", "B"), ("09:30:00.118", "09988", "84.35", "1,200", "S"),
+            ("09:30:00.131", "00700", "381.40", "300", "B"), ("09:30:00.140", "03690", "142.10", "800", "S"),
+            ("09:30:00.156", "00005", "71.05", "2,400", "B"), ("09:30:00.171", "00700", "381.20", "700", "S"),
+            ("09:30:00.188", "09988", "84.40", "900", "B"), ("09:30:00.204", "01299", "63.85", "1,600", "B")]
+    lh, n = 17, len(rows)
+    body = ""
+    for k in range(n * 2):
+        t, code, px, qty, side = rows[k % n]
+        yy = y + 14 + k * lh
+        col = T["up"] if side == "B" else T["down"]
+        body += (f'<text x="{x}" y="{yy}" class="m" font-size="10.5" fill="{T["muted"]}">{t}</text>'
+                 f'<text x="{x + 92}" y="{yy}" class="m b" font-size="10.5" fill="{T["amber"]}">{code}</text>'
+                 f'<text x="{x + 190}" y="{yy}" class="m" font-size="10.5" fill="{T["text"]}" text-anchor="end">{px}</text>'
+                 f'<text x="{x + 250}" y="{yy}" class="m" font-size="10.5" fill="{T["muted"]}" text-anchor="end">{qty}</text>'
+                 f'<text x="{x + w}" y="{yy}" class="m b" font-size="10.5" fill="{col}" text-anchor="end">{side}</text>')
+    return (f'<clipPath id="feed"><rect x="{x - 4}" y="{y}" width="{w + 8}" height="{h}"/></clipPath>'
+            f'<g clip-path="url(#feed)"><g class="feed" style="--d:-{n * lh}px">{body}</g></g>'
+            + label(x, y + h + 16, "MOCK FEED · OPEND -> QUEUE -> SQLITE WAL -> ZSTD", size=9))
+
+
+def _visual_pipeline(x, y, w, h, steps, caption):
+    """Boxes joined by a wire with a pulse travelling along it."""
+    n = len(steps)
+    bw, gap = (w - (n - 1) * 14) / n, 14
+    out = f'<line x1="{x}" y1="{y + h / 2}" x2="{x + w}" y2="{y + h / 2}" stroke="{T["line"]}" stroke-width="2"/>'
+    out += f'<circle cx="{x}" cy="{y + h / 2}" r="3.5" fill="{T["amber"]}" class="pulse" style="--w:{w}px"/>'
+    for i, (head, lines) in enumerate(steps):
+        bx = x + i * (bw + gap)
+        out += (f'<g class="rise" style="animation-delay:{300 + i * 150}ms"><rect x="{bx:.1f}" y="{y}" width="{bw:.1f}" height="{h}" rx="6" fill="{T["panel"]}" stroke="{T["line"]}"/>'
+                f'<text x="{bx + 10:.1f}" y="{y + 20}" class="m b" font-size="10" fill="{T["amber"]}">{esc(head)}</text>')
+        for j, ln in enumerate(lines):
+            out += f'<text x="{bx + 10:.1f}" y="{y + 40 + j * 15}" class="m" font-size="9.5" fill="{T["text"] if j == 0 else T["muted"]}">{esc(ln)}</text>'
+        out += "</g>"
+    return out + label(x, y + h + 16, caption, size=9)
+
+
+def banner(r, spec, stars, now):
+    """Repository header in the profile's terminal language, with live repo stats."""
+    H = 250
+    lang = ((r.get("primaryLanguage") or {}).get("name") or "").upper()
+    ticker = r["name"].upper()
+    c, cw = chip(16, 10, f"{ticker} <GO>", size=12)
+    stat = f'{r["stargazerCount"]:,} STARS · {r["forkCount"]:,} FORKS · {lang} · {r["_ago"].upper()}'
+    b = [c, f'<text x="{16 + cw + 16:.1f}" y="24.5" class="m" font-size="11" fill="{T["muted"]}">{esc(spec["kicker"])}</text>',
+         f'<text x="{W - 18}" y="24.5" class="m" font-size="11" fill="{T["muted"]}" text-anchor="end">{esc(stat)}</text>',
+         f'<line x1="0" y1="40.5" x2="{W}" y2="40.5" stroke="{T["line"]}"/>']
+    size = 34 if len(r["name"]) <= 16 else 28
+    b.append(f'<text x="32" y="{96}" class="m b" font-size="{size}" fill="{T["text"]}">{esc(r["name"])}</text>'
+             f'<text x="32" y="126" class="m" font-size="13.5" fill="{T["text"]}">{esc(spec["pitch"])}</text>'
+             f'<text x="32" y="148" class="m" font-size="12.5" fill="{T["muted"]}">{esc(spec["zh"])}</text>')
+    x = 32
+    for tag in spec["tags"]:
+        tw = text_width(tag, 10) + 16
+        b.append(f'<rect x="{x}" y="164" width="{tw:.1f}" height="20" rx="3" fill="{T["amber_dim"]}" stroke="{T["amber"]}" stroke-opacity=".5"/>'
+                 f'<text x="{x + tw / 2:.1f}" y="178" class="m b" font-size="10" fill="{T["amber"]}" text-anchor="middle">{esc(tag)}</text>')
+        x += tw + 8
+    # footer: where this repo sits in the suite, or its research provenance
+    if r["name"] in SUITE:
+        fx = 32
+        b.append(label(fx, H - 22, "PIPELINE", size=9))
+        fx += 76
+        for i, name in enumerate(SUITE):
+            on = name == r["name"]
+            s = f"{i + 1} {SUITE_LABEL[name]}"
+            b.append(f'<text x="{fx}" y="{H - 22}" class="m{" b" if on else ""}" font-size="10.5" fill="{T["amber"] if on else T["muted"]}">{s}</text>')
+            if on:
+                b.append(f'<rect x="{fx}" y="{H - 17}" width="{text_width(s, 10.5):.1f}" height="2" fill="{T["amber"]}"/>')
+            fx += text_width(s, 10.5) + 12
+            if i < len(SUITE) - 1:
+                b.append(f'<text x="{fx}" y="{H - 22}" class="m" font-size="10.5" fill="{T["line"]}">-&gt;</text>')
+                fx += 30
+    else:
+        b.append(label(32, H - 22, spec.get("footer", ""), size=9.5, fill=T["amber"]))
+    # right visual
+    vx, vy, vw, vh = 530, 62, 326, 140
+    b.append(f'<rect x="{vx - 14}" y="{vy - 12}" width="{vw + 28}" height="{vh + 46}" rx="8" fill="{T["panel"]}" stroke="{T["line"]}"/>')
+    kind = spec["visual"]
+    if kind == "stars":
+        b.append(_visual_stars(stars, now, vx, vy + 10, vw, vh - 20))
+    elif kind == "ticks":
+        b.append(_visual_ticks(vx, vy, vw, vh))
+    else:
+        b.append(_visual_pipeline(vx, vy + 22, vw, vh - 34, spec["steps"], spec["caption"]))
+    css = """
+.feed{animation:feed 7s linear infinite}
+@keyframes feed{to{transform:translateY(var(--d))}}
+.pulse{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%{transform:translateX(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateX(var(--w));opacity:0}}
+@media (prefers-reduced-motion:reduce){.feed,.pulse{animation:none}}
+"""
+    return svg_doc(W, H, "\n".join(b), f'{r["name"]}: {spec["pitch"]}', css)
