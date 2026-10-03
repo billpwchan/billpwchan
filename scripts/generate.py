@@ -3,6 +3,7 @@
 Usage: GH_TOKEN=... python scripts/generate.py [out_dir]
 Each data source is isolated: if one feed fails, its card is skipped and the previous render stays live.
 """
+import json
 import sys
 import traceback
 from pathlib import Path
@@ -120,15 +121,7 @@ def session_focus(sess, now):
     return CRYPTO, "CASH MARKETS CLOSED · CRYPTO 24/7"
 
 
-# Power-on order, top to bottom, in seconds: the page boots like a terminal instead of every tile animating at once.
-BOOT = {"hero": 0, "key-web": .3, "key-in": .38, "key-mail": .46, "key-ig": .54, "key-gh": .62, "strip-work": .75,
-        "work-futu_algo": .85, "work-futu_tick_downloader": .95, "work-strategy_powerbacktest": 1.05, "work-DeepTrust": 1.15,
-        "strip-lab": 1.3, "regime": 1.4, "risk": 1.55, "derivatives": 1.75, "strip-flow": 1.95, "activity": 2.05,
-        "snake": 2.25, "recent": 2.45}
-
-
 def write(name, svg):
-    svg = theme.boot(svg, BOOT.get(name, 0))
     (OUT / f"{name}.svg").write_text(svg)
     print(f"wrote {name}.svg ({len(svg) // 1024} KB)")
 
@@ -152,6 +145,10 @@ def github_cards():
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    # last render's values, restored with the output branch; anything that moved since then flashes once
+    state = OUT / "state.json"
+    if state.exists():
+        theme.PREV.update(json.loads(state.read_text()))
     stamp = NOW.astimezone(HKT).strftime("%d %b %H:%M HKT").upper()
 
     gh = guarded("github", github_cards)
@@ -182,7 +179,7 @@ def main():
             if name in by_name:
                 r = dict(by_name[name], _ago=f"UPDATED {ago(data.parse_ts(by_name[name]['pushedAt'])).upper()}")
                 stars = guarded(f"stars {name}", data.fetch_stars, name) or []
-                write(f"work-{name}", cards.work_card(r, copy, stars, NOW, i % 2))
+                write(f"work-{name}", cards.work_card(r, copy, stars, NOW, i % 2, dur=(19, 23, 31, 37)[i % 4]))
                 if name in BANNERS:
                     write(f"banner-{name}", cards.banner(r, BANNERS[name], stars, NOW))
         times = guarded("commit times", data.fetch_commit_times, user["id"], repos, HKT)
@@ -227,6 +224,9 @@ def main():
             funding = float(perps["BTC"]["funding"]) * 24 * 365 * 100 if "BTC" in perps else None
             write("regime", cards.regime(rows, syms, M, CRYPTO, term, funding))
         guarded("regime", render_regime)
+
+    # keep last known values for feeds that failed this run, so their next success compares against something real
+    state.write_text(json.dumps({**theme.PREV, **theme.CURR}, sort_keys=True, indent=0))
 
 
 def fmt(v, short):
