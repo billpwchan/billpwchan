@@ -119,53 +119,111 @@ def fmt_price(p):
     return f"{p:,.0f}" if p >= 10000 else f"{p:,.2f}"
 
 
-def _windows(n, start, end):
-    """Split [start, end] (percent of the loop) into n equal dwell windows."""
-    step = (end - start) / n
-    return [(start + i * step, start + (i + 1) * step) for i in range(n)]
+def _ease(u):
+    """easeInOutCubic: a cursor leaves gently, travels, and settles."""
+    return 4 * u ** 3 if u < .5 else 1 - (-2 * u + 2) ** 3 / 2
 
 
-def scrub(uid, pts, labels, top, bottom, right_edge, dur=16, color=None):
-    """Auto-playing crosshair that reads a chart like a trader would: glides through `pts`,
-    showing each label as it passes, holds on the latest value, fades, repeats."""
+def _lerp_pts(pts, f):
+    i = min(int(f), len(pts) - 2)
+    t = f - i
+    (x1, y1), (x2, y2) = pts[i], pts[i + 1]
+    return x1 + (x2 - x1) * t, y1 + (y2 - y1) * t
+
+
+def crosshair(uid, path, stops, xlabels, ylabels, box, color=None, dwell=1.8, glide=1.1, hold=3.2, tags_top=None, tag_side=None):
+    """A trader's crosshair. Glides along the real curve (`path`, every data point) with eased motion,
+    settles on each stop and shows its readings as axis tags (date on top, value on the side), then
+    rests on the latest point and fades. `stops` index into `path`; labels are per stop.
+    box = (left, top, right, bottom) of the plot area."""
     color = color or T["amber"]
-    n = len(pts)
-    wins = _windows(n, 4, 78)
-    move = "".join(f"{a:.2f}%{{transform:translate({x:.1f}px,0)}}" for (a, _), (x, _) in zip(wins, pts))
-    dot = "".join(f"{a:.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}" for (a, _), (x, y) in zip(wins, pts))
-    css = (f"@keyframes {uid}m{{0%{{transform:translate({pts[0][0]:.1f}px,0)}}{move}100%{{transform:translate({pts[-1][0]:.1f}px,0)}}}}\n"
-           f"@keyframes {uid}d{{0%{{transform:translate({pts[0][0]:.1f}px,{pts[0][1]:.1f}px)}}{dot}100%{{transform:translate({pts[-1][0]:.1f}px,{pts[-1][1]:.1f}px)}}}}\n"
-           f"@keyframes {uid}f{{0%,2%{{opacity:0}}5%,90%{{opacity:1}}96%,100%{{opacity:0}}}}\n"
-           f".{uid}{{animation:{uid}f {dur}s linear infinite}}\n"
-           f".{uid}m{{animation:{uid}m {dur}s linear infinite}}\n.{uid}d{{animation:{uid}d {dur}s linear infinite}}\n")
-    out = [f'<g class="{uid}">',
-           f'<g class="{uid}m"><line x1="0" y1="{top}" x2="0" y2="{bottom}" stroke="{color}" stroke-opacity=".55" stroke-dasharray="2 2"/>']
-    for i, ((a, b), (x, _), lab) in enumerate(zip(wins, pts, labels)):
-        last = i == n - 1
-        end = 92 if last else b
-        css += f"@keyframes {uid}l{i}{{0%,{a - .01:.2f}%{{opacity:0}}{a:.2f}%,{end:.2f}%{{opacity:1}}{end + .01:.2f}%,100%{{opacity:0}}}}\n"
-        w = text_width(lab, 10) + 12
-        lx = 6 if x + 6 + w < right_edge else -6 - w
-        out.append(f'<g style="animation:{uid}l{i} {dur}s linear infinite;opacity:0">'
-                   f'<rect x="{lx:.1f}" y="{top - 2}" width="{w:.1f}" height="17" rx="3" fill="{T["bg"]}" stroke="{color}" stroke-opacity=".7"/>'
-                   f'<text x="{lx + 6:.1f}" y="{top + 10}" class="m" font-size="10" fill="{T["text"]}">{esc(lab)}</text></g>')
-    out.append(f'</g><circle r="3.6" fill="{T["bg"]}" stroke="{color}" stroke-width="2" class="{uid}d"/></g>')
+    left, top, right, bottom = box
+    tags_top = top - 9 if tags_top is None else tags_top
+    tag_side = right + 4 if tag_side is None else tag_side
+    fade_in, fade_out, gap = .6, .8, 1.0
+    # timeline of (seconds, fractional index into path); dwell windows for the tags
+    events, windows, t = [(0, stops[0])], [], fade_in
+    for k, idx in enumerate(stops):
+        stay = hold if k == len(stops) - 1 else dwell
+        events.append((t, idx))
+        windows.append((t, t + stay))
+        t += stay
+        events.append((t, idx))
+        if k < len(stops) - 1:
+            nxt = stops[k + 1]
+            for j in range(1, 17):
+                u = j / 16
+                events.append((t + glide * u, idx + (nxt - idx) * _ease(u)))
+            t += glide
+    end = t
+    total = end + fade_out + gap
+    pct = lambda sec: sec / total * 100
+    pos = [(pct(sec), _lerp_pts(path, f)) for sec, f in events]
+    kx = "".join(f"{q:.2f}%{{transform:translate({x:.1f}px,0)}}" for q, (x, _) in pos)
+    ky = "".join(f"{q:.2f}%{{transform:translate(0,{y:.1f}px)}}" for q, (_, y) in pos)
+    kd = "".join(f"{q:.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}" for q, (x, y) in pos)
+    css = (f"@keyframes {uid}x{{{kx}100%{{transform:translate({pos[-1][1][0]:.1f}px,0)}}}}\n"
+           f"@keyframes {uid}y{{{ky}100%{{transform:translate(0,{pos[-1][1][1]:.1f}px)}}}}\n"
+           f"@keyframes {uid}d{{{kd}100%{{transform:translate({pos[-1][1][0]:.1f}px,{pos[-1][1][1]:.1f}px)}}}}\n"
+           f"@keyframes {uid}o{{0%{{opacity:0}}{pct(fade_in):.2f}%,{pct(end):.2f}%{{opacity:1}}{pct(end + fade_out):.2f}%,100%{{opacity:0}}}}\n"
+           f".{uid}{{animation:{uid}o {total:.2f}s linear infinite}}"
+           f".{uid}x{{animation:{uid}x {total:.2f}s linear infinite}}.{uid}y{{animation:{uid}y {total:.2f}s linear infinite}}"
+           f".{uid}d{{animation:{uid}d {total:.2f}s linear infinite}}\n")
+    xtags, ytags = "", ""
+    for k, ((a, b), idx) in enumerate(zip(windows, stops)):
+        x, y = _lerp_pts(path, idx)
+        f0, f1 = pct(a), pct(min(a + .3, b))
+        g0, g1 = pct(max(b - .25, a)), pct(b)
+        css += (f"@keyframes {uid}t{k}{{0%,{f0:.2f}%{{opacity:0;transform:translateY(2px)}}{f1:.2f}%,{g0:.2f}%{{opacity:1;transform:none}}"
+                f"{g1:.2f}%,100%{{opacity:0;transform:none}}}}\n")
+        anim = f'style="opacity:0;animation:{uid}t{k} {total:.2f}s linear infinite"'
+        if xlabels and xlabels[k]:
+            w = text_width(xlabels[k], 9.5) + 12
+            off = min(max(-w / 2, left - x), right - x - w)   # keep the tag inside the plot
+            xtags += (f'<g {anim}><rect x="{off:.1f}" y="{tags_top - 11:.1f}" width="{w:.1f}" height="15" rx="2" fill="{color}"/>'
+                      f'<text x="{off + 6:.1f}" y="{tags_top:.1f}" class="m b" font-size="9.5" fill="{T["ink"]}">{esc(xlabels[k])}</text></g>')
+        if ylabels and ylabels[k]:
+            w = text_width(ylabels[k], 9.5) + 10
+            ytags += (f'<g {anim}><rect x="{tag_side:.1f}" y="-7.5" width="{w:.1f}" height="15" rx="2" fill="{T["bg"]}" stroke="{color}"/>'
+                      f'<text x="{tag_side + 5:.1f}" y="3.5" class="m b" font-size="9.5" fill="{T["text"]}">{esc(ylabels[k])}</text></g>')
+    line = f'stroke="{color}" stroke-opacity=".5" stroke-dasharray="3 3"'
+    svg = (f'<g class="{uid}">'
+           f'<g class="{uid}x"><line x1="0" y1="{top}" x2="0" y2="{bottom}" {line}/>{xtags}</g>'
+           f'<g class="{uid}y"><line x1="{left}" y1="0" x2="{right}" y2="0" {line}/>{ytags}</g>'
+           f'<circle r="6" fill="{color}" fill-opacity=".18" class="{uid}d"/>'
+           f'<circle r="3.2" fill="{T["bg"]}" stroke="{color}" stroke-width="2" class="{uid}d"/></g>')
     css += f"@media (prefers-reduced-motion:reduce){{.{uid}{{display:none}}}}\n"
-    return "".join(out), css
-
-
-def row_scan(uid, rects, dur, color=None):
-    """A cursor that steps down a blotter, resting on each row in turn."""
-    color = color or T["amber"]
-    wins = _windows(len(rects), 0, 100)
-    kf = "".join(f"{a:.2f}%,{b - .01:.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}" for (a, b), (x, y, _, _) in zip(wins, rects))
-    w, h = rects[0][2], rects[0][3]
-    css = (f"@keyframes {uid}{{{kf}}}\n.{uid}{{animation:{uid} {dur}s steps(1) infinite}}\n"
-           f"@media (prefers-reduced-motion:reduce){{.{uid}{{display:none}}}}\n")
-    svg = (f'<g class="{uid}"><rect width="{w:.1f}" height="{h:.1f}" rx="4" fill="{color}" fill-opacity=".07"/>'
-           f'<rect width="2" height="{h:.1f}" fill="{color}"/></g>')
     return svg, css
 
+
+def glide_cursor(uid, spots, dwell=1.7, glide=.6, color=None, readouts=None, readout_xy=None):
+    """A highlight that eases from spot to spot (rows of a blotter, cells of a matrix), settling on each;
+    optional read-out text crossfades in a fixed footer position."""
+    color = color or T["amber"]
+    n = len(spots)
+    total = n * (dwell + glide)
+    pct = lambda sec: sec / total * 100
+    kf, t = "", 0.0
+    for x, y, _, _ in spots:
+        kf += f"{pct(t):.2f}%,{pct(t + dwell):.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}"
+        t += dwell + glide
+    x0, y0 = spots[0][:2]
+    w, h = spots[0][2], spots[0][3]
+    css = (f"@keyframes {uid}{{{kf}100%{{transform:translate({x0:.1f}px,{y0:.1f}px)}}}}\n"
+           f".{uid}{{animation:{uid} {total:.2f}s cubic-bezier(.65,0,.35,1) infinite}}\n")
+    svg = f'<g class="{uid}"><rect width="{w:.1f}" height="{h:.1f}" rx="5" fill="{color}" fill-opacity=".07" stroke="{color}" stroke-opacity=".55"/></g>'
+    if readouts:
+        rx, ry = readout_xy
+        t = 0.0
+        for k, txt in enumerate(readouts):
+            a, b = t, t + dwell
+            css += (f"@keyframes {uid}r{k}{{0%,{pct(a):.2f}%{{opacity:0}}{pct(a + .3):.2f}%,{pct(b - .2):.2f}%{{opacity:1}}"
+                    f"{pct(b):.2f}%,100%{{opacity:0}}}}\n")
+            svg += (f'<text x="{rx}" y="{ry}" class="m" font-size="10" fill="{T["text"]}" text-anchor="end" style="opacity:0;'
+                    f'animation:{uid}r{k} {total:.2f}s linear infinite">{txt}</text>')
+            t += dwell + glide
+    css += f"@media (prefers-reduced-motion:reduce){{.{uid}{{display:none}}}}\n"
+    return svg, css
 
 # Values from the previous render (state.json on the output branch) and this one.
 PREV, CURR = {}, {}
