@@ -3,7 +3,7 @@ import datetime as dt
 import math
 from collections import Counter
 
-from theme import (CW, T, W, _windows, chip, esc, flash, fmt_num, fmt_price, label, line_path, row_scan, scrub, signed, svg_doc,
+from theme import (CW, T, W, chip, crosshair, esc, flash, fmt_num, fmt_price, glide_cursor, label, line_path, signed, svg_doc,
                    text_width, title_bar, tone)
 
 
@@ -68,7 +68,7 @@ def recent(repos, ago):
                  f'<text x="{W - 110}" y="{y}" class="m" font-size="10" fill="{T["cyan"]}" text-anchor="end">{esc(lang)}</text>'
                  f'<text x="{W - 18}" y="{y}" class="m" font-size="11" fill="{T["amber"]}" text-anchor="end">{esc(ago(r).upper())}</text></g>'
                  + (f'<line x1="18" y1="{y + 12.5}" x2="{W - 18}" y2="{y + 12.5}" stroke="{T["grid"]}"/>' if i < len(rows) - 1 else ""))
-    cur, css = row_scan("rs", [(10, 64 + i * 30 - 18, W - 20, 26) for i in range(len(rows))], 37)
+    cur, css = glide_cursor("rs", [(10, 64 + i * 30 - 18, W - 20, 26) for i in range(len(rows))], dwell=2.6, glide=.7)
     b.insert(1, cur)
     return svg_doc(W, H, "\n".join(b), "Recently pushed repositories", css)
 
@@ -171,12 +171,13 @@ def hero(p):
     b.append(f'<path d="{line} L{cx0 + cw_},{cy0 + ch} L{cx0},{cy0 + ch} Z" fill="url(#area)"/>'
              f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" stroke-linejoin="round"/>'
              f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="{T["amber"]}"/>')
-    # crosshair reads the cumulative curve month by month, then rests on today
+    # crosshair settles every two months along the real curve, then rests on today
     import datetime as _dt
     end = _dt.date.fromisoformat(p["end"]) if p.get("end") else None
-    idx = [round(k * (len(cum) - 1) / 11) for k in range(12)]
-    labels = [f'{(end - _dt.timedelta(days=len(cum) - 1 - i)).strftime("%d %b").upper() if end else ""} {cum[i]:,}'.strip() for i in idx]
-    xh_svg, xh_css = scrub("xh", [pts[i] for i in idx], labels, cy0 - 6, cy0 + ch, cx0 + cw_, dur=17)
+    stops = [round(k * (len(cum) - 1) / 6) for k in range(7)]
+    day = lambda i: (end - _dt.timedelta(days=len(cum) - 1 - i)).strftime("%d %b").upper() if end else ""
+    xh_svg, xh_css = crosshair("xh", pts, stops, [day(i) for i in stops], [f"{cum[i]:,}" for i in stops],
+                               (cx0, cy0, cx0 + cw_, cy0 + ch), tags_top=cy0 + 12, tag_side=cx0 + cw_ + 2)
     b.append(xh_svg)
     vy, vh, vmax, bw = cy0 + ch + 8, 26, max(max(year), 1), cw_ / len(year)
     bars = "".join(f'<rect x="{cx0 + i * bw:.2f}" y="{vy + vh - v / vmax * vh:.1f}" width="{max(bw - .3, .6):.2f}" height="{v / vmax * vh:.1f}"/>'
@@ -221,11 +222,12 @@ def work_card(r, copy, stars, now, side, dur=19):
                  f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="2.6" fill="{T["amber"]}"/>'
                  + label(cx + 8, cy + ch + 13, str(stars[0].year), size=9)
                  + label(cx + cw - 2, cy + ch + 13, "NOW", "end", size=9))
-        idx = [round(k * (n - 1) / 7) for k in range(8)]
-        when = [dt.datetime.fromtimestamp(t0 + (t1 - t0) * i / (n - 1), dt.timezone.utc) for i in idx]
-        xh, xh_css = scrub(f"w{side}{len(stars) % 97}", [pts[i] for i in idx],
-                           [f'{d.strftime("%b %y").upper()}  {buckets[i]:,}' for d, i in zip(when, idx)],
-                           cy + 4, cy + ch - 8, cx + cw - 4, dur=dur)
+        stops = [round(k * (n - 1) / 4) for k in range(5)]
+        when = [dt.datetime.fromtimestamp(t0 + (t1 - t0) * i / (n - 1), dt.timezone.utc) for i in stops]
+        xh, xh_css = crosshair(f"w{side}{len(stars) % 97}", pts, stops,
+                               [f'{d.strftime("%b %y").upper()} · {buckets[i]:,}' for d, i in zip(when, stops)], None,
+                               (cx + 6, cy + 8, cx + cw - 6, cy + ch - 8), tags_top=cy + 20, dwell=2.2, glide=1.4,
+                               hold=3.6 + dur / 10)
         b.append(xh)
     else:
         xh_css = ""
@@ -320,18 +322,13 @@ def risk_monitor(series, crypto, stamp):
             fill = T["ink"] if abs(v) >= .6 and i != j else T["text"]
             b.append(f'<g><rect x="{x + 2}" y="{y + 2}" width="{cs - 4}" height="{cs - 4}" rx="4" fill="{col}" fill-opacity="{op:.2f}"/>'
                      f'<text x="{x + cs / 2:.1f}" y="{y + cs / 2 + 3.5:.1f}" class="m" font-size="{10 if cs >= 38 else 9}" fill="{fill}" text-anchor="middle">{txt}</text></g>')
-    pairs_ij = [(i, j) for i in range(n) for j in range(i + 1, n)]
-    wins = _windows(len(pairs_ij), 0, 100)
-    kf = "".join(f"{a:.2f}%,{bb - .01:.2f}%{{transform:translate({hx + j * cs:.1f}px,{86 + i * cs:.1f}px)}}" for (a, bb), (i, j) in zip(wins, pairs_ij))
-    scan_css = f"@keyframes scan{{{kf}}}\n.scan{{animation:scan {len(pairs_ij) * 1.4:.1f}s steps(1) infinite}}\n"
-    b.append(f'<rect class="scan" x="1" y="1" width="{cs - 2}" height="{cs - 2}" rx="5" fill="none" stroke="{T["text"]}" stroke-width="1.5"/>')
-    for k, ((a, bb), (i, j)) in enumerate(zip(wins, pairs_ij)):
-        scan_css += f"@keyframes rd{k}{{0%,{a - .01:.2f}%{{opacity:0}}{a:.2f}%,{bb - .01:.2f}%{{opacity:1}}{bb:.2f}%,100%{{opacity:0}}}}\n"
-        b.append(f'<text x="{W - 18}" y="{H - 16}" class="m" font-size="10" fill="{T["text"]}" text-anchor="end" '
-                 f'style="opacity:0;animation:rd{k} {len(pairs_ij) * 1.4:.1f}s linear infinite">{syms[i]} x {syms[j]}  '
-                 f'<tspan fill="{T["amber"] if M[i][j] >= 0 else T["cyan"]}">{M[i][j]:+.2f}</tspan></text>')
-    scan_css += "@media (prefers-reduced-motion:reduce){.scan{display:none}}\n"
-    cur, cur_css = row_scan("rk", [(10, 100 + i * 32 - 20, 500, 30) for i in range(len(rows))], 13)
+    # the matrix cursor visits only the strongest relationships, strongest first
+    pairs_ij = sorted(((i, j) for i in range(n) for j in range(i + 1, n)), key=lambda ij: -abs(M[ij[0]][ij[1]]))[:7]
+    cell, scan_css = glide_cursor("cx", [(hx + j * cs + 1, 86 + i * cs + 1, cs - 2, cs - 2) for i, j in pairs_ij], dwell=2.2, glide=.7,
+                                  color=T["text"], readouts=[f'{syms[i]} x {syms[j]}  <tspan fill="{T["amber"] if M[i][j] >= 0 else T["cyan"]}">{M[i][j]:+.2f}</tspan>'
+                                                             for i, j in pairs_ij], readout_xy=(W - 18, H - 16))
+    b.append(cell)
+    cur, cur_css = glide_cursor("rk", [(10, 100 + i * 32 - 20, 500, 30) for i in range(len(rows))], dwell=1.9, glide=.6)
     b.insert(1, cur)
     scan_css += cur_css
     crypto_syms = [s for s in syms if s in crypto]
@@ -418,7 +415,8 @@ def derivatives(vol, perps, stamp):
         for d, iv, _ in curves[lead]:
             o = iv_at(curves[other], d) if other else None
             labels.append(f"{d:.0f}D  {lead} {iv:.1f}" + (f"  {other} {o:.1f}" if o is not None else ""))
-        xh, xh_css = scrub("dv", pts_lead, labels, y0 - 6, y0 + ch, x0 + cw + 40, dur=23, color=colors.get(lead))
+        xh, xh_css = crosshair("dv", pts_lead, list(range(len(pts_lead))), labels, None, (x0, y0, x0 + cw, y0 + ch),
+                               color=colors.get(lead), tags_top=y0 - 2, dwell=2.0, glide=1.0)
         b.append(xh)
     else:
         xh_css = ""
@@ -482,8 +480,9 @@ def activity(times):
     b.append(f'<text x="{wx}" y="{y0 + ch + 36}" class="m" font-size="10" fill="{T["muted"]}">PEAK <tspan fill="{T["amber"]}">{top:02d}:00</tspan>'
              f'  ·  AFTER-HOURS <tspan fill="{T["amber"]}">{night:.0f}%</tspan></text>')
     tops = [(x0 + hr * bw + bw / 2, y0 + ch - hours.get(hr, 0) / peak * (ch - 22)) for hr in range(24)]
-    xh, xh_css = scrub("ph", tops, [f"{hr:02d}:00  {hours.get(hr, 0)} COMMITS" for hr in range(24)],
-                       y0 + 18, y0 + ch, x0 + cw, dur=29, color=T["text"])
+    stops = sorted({3, 9, 14, 21, top} | {max(range(9, 17), key=lambda hr: hours.get(hr, 0))})
+    xh, xh_css = crosshair("ph", tops, stops, [f"{hr:02d}:00" for hr in stops], [f"{hours.get(hr, 0)}" for hr in stops],
+                           (x0, y0 + 18, x0 + cw, y0 + ch), color=T["text"], tags_top=y0 + 30, tag_side=x0 + cw + 4)
     b.append(xh)
     return svg_doc(W, H, "\n".join(b), "Commit volume profile by hour and weekday", xh_css)
 
