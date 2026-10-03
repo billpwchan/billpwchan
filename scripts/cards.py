@@ -176,7 +176,7 @@ def hero(p):
     end = _dt.date.fromisoformat(p["end"]) if p.get("end") else None
     idx = [round(k * (len(cum) - 1) / 11) for k in range(12)]
     labels = [f'{(end - _dt.timedelta(days=len(cum) - 1 - i)).strftime("%d %b").upper() if end else ""} {cum[i]:,}'.strip() for i in idx]
-    xh_svg, xh_css = scrub("xh", [pts[i] for i in idx], labels, cy0 - 6, cy0 + ch, px + pw - 6, dur=17)
+    xh_svg, xh_css = scrub("xh", [pts[i] for i in idx], labels, cy0 - 6, cy0 + ch, cx0 + cw_, dur=17)
     b.append(xh_svg)
     vy, vh, vmax, bw = cy0 + ch + 8, 26, max(max(year), 1), cw_ / len(year)
     bars = "".join(f'<rect x="{cx0 + i * bw:.2f}" y="{vy + vh - v / vmax * vh:.1f}" width="{max(bw - .3, .6):.2f}" height="{v / vmax * vh:.1f}"/>'
