@@ -3,8 +3,8 @@ import datetime as dt
 import math
 from collections import Counter
 
-from theme import (CW, T, W, chip, odometer, esc, fmt_num, fmt_price, label, line_path, signed, svg_doc, text_width,
-                   title_bar, tone)
+from theme import (CW, T, W, _windows, chip, esc, flash, fmt_num, fmt_price, label, line_path, row_scan, scrub, signed, svg_doc,
+                   text_width, title_bar, tone)
 
 
 SECTIONS = ["DES", "WORK", "LAB", "FLOW"]
@@ -63,13 +63,14 @@ def recent(repos, ago):
                 break
             out, width = out + ch, width + cw
         lang = ((r.get("primaryLanguage") or {}).get("name") or "").upper()
-        b.append(f'<g class="rise" style="animation-delay:{i * 60}ms">'
-                 f'<text x="18" y="{y}" class="m b" font-size="12.5" fill="{T["text"]}">{esc(name)}</text>'
+        b.append(f'<g><text x="18" y="{y}" class="m b" font-size="12.5" fill="{T["text"]}">{esc(name)}</text>'
                  f'<text x="{18 + text_width(name, 12.5) + 14:.1f}" y="{y}" class="m" font-size="11.5" fill="{T["muted"]}">{esc(out)}</text>'
                  f'<text x="{W - 110}" y="{y}" class="m" font-size="10" fill="{T["cyan"]}" text-anchor="end">{esc(lang)}</text>'
                  f'<text x="{W - 18}" y="{y}" class="m" font-size="11" fill="{T["amber"]}" text-anchor="end">{esc(ago(r).upper())}</text></g>'
                  + (f'<line x1="18" y1="{y + 12.5}" x2="{W - 18}" y2="{y + 12.5}" stroke="{T["grid"]}"/>' if i < len(rows) - 1 else ""))
-    return svg_doc(W, H, "\n".join(b), "Recently pushed repositories")
+    cur, css = row_scan("rs", [(10, 64 + i * 30 - 18, W - 20, 26) for i in range(len(rows))], 37)
+    b.insert(1, cur)
+    return svg_doc(W, H, "\n".join(b), "Recently pushed repositories", css)
 
 
 def snake_panel(snake_svg):
@@ -135,19 +136,15 @@ def hero(p):
     # identity + function-code rows typed out once
     b.append(f'<text x="32" y="128" class="m b" font-size="38" letter-spacing="1" fill="{T["text"]}">{esc(p["name"])}</text>'
              f'<text x="34" y="154" class="m" font-size="12.5" letter-spacing="2.2" fill="{T["amber"]}">{esc(p["role"])}</text>')
-    fs, t0, cps = 13.5, 0.4, 0.02
+    fs = 13.5
     for i, (code, val) in enumerate(p["rows"]):
         y = 188 + i * 28
-        n = len(val)
         b.append(f'<rect x="32" y="{y - 14}" width="50" height="19" rx="2.5" fill="{T["amber_dim"]}" stroke="{T["amber"]}" stroke-opacity=".55"/>'
                  f'<text x="57" y="{y}" class="m b" font-size="10.5" fill="{T["amber"]}" text-anchor="middle">{esc(code)}</text>'
-                 f'<text x="96" y="{y}" class="m" font-size="{fs}" fill="{T["text"]}">{esc(val)}</text>'
-                 f'<rect class="ov" x="95" y="{y - fs}" width="{text_width(val, fs) + 3:.1f}" height="{fs * 1.45:.1f}" fill="{T["bg"]}" '
-                 f'style="animation-duration:{n * cps:.2f}s;animation-delay:{t0:.2f}s;animation-timing-function:steps({n})"/>')
-        t0 += n * cps + 0.15
+                 f'<text x="96" y="{y}" class="m" font-size="{fs}" fill="{T["text"]}">{esc(val)}</text>')
     ylast = 188 + (len(p["rows"]) - 1) * 28
     b.append(f'<rect class="cur" x="{96 + text_width(p["rows"][-1][1], fs) + 4:.1f}" y="{ylast - 12}" width="8" height="15" '
-             f'fill="{T["amber"]}" style="animation-delay:{t0:.2f}s"/>')
+             f'fill="{T["amber"]}"/>')
 
     # contributions panel
     px, py, pw, ph = 548, 90, 308, 234
@@ -157,11 +154,11 @@ def hero(p):
         acc += v
         cum.append(acc)
     big = f"{cum[-1]:,}"
-    odo_svg, odo_css = odometer(px + 16, py + 62, big, 28, T["text"], delay=0.5)
     b.append(f'<rect x="{px}" y="{py}" width="{pw}" height="{ph}" rx="8" fill="{T["panel"]}" stroke="{T["line"]}"/>'
              f'<text x="{px + 16}" y="{py + 26}" class="m b" font-size="11.5" fill="{T["amber"]}">BILL:GH</text>'
              f'<text x="{px + 76}" y="{py + 26}" class="m" font-size="10.5" fill="{T["muted"]}">CONTRIBUTIONS · 52W</text>'
-             + odo_svg +
+             + flash("hero.contrib12m", cum[-1], px + 12, py + 38, text_width(big, 28) + 8, 32)
+             + f'<text x="{px + 16}" y="{py + 62}" class="m b" font-size="28" fill="{T["text"]}">{big}</text>'
              f'<text x="{px + 16 + text_width(big, 28) + 10:.1f}" y="{py + 62}" class="m" font-size="11.5" fill="{T["up"]}">12M · {fmt_num(p["total"]).upper()} ALL-TIME</text>')
     cx0, cy0, cw_, ch = px + 16, py + 80, pw - 60, 96
     for k in range(4):
@@ -171,10 +168,16 @@ def hero(p):
                  f'<text x="{px + pw - 12}" y="{gy + 3.5:.1f}" class="m" font-size="9.5" fill="{T["muted"]}" text-anchor="end">'
                  f'{f"{val / 1000:.1f}k" if val >= 1000 else f"{val:.0f}"}</text>')
     pts, line = line_path(cum, cx0, cy0, cw_, ch, lo=0, hi=max(cum[-1], 1))
-    b.append(f'<path d="{line} L{cx0 + cw_},{cy0 + ch} L{cx0},{cy0 + ch} Z" fill="url(#area)" class="fadein"/>'
-             f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" stroke-linejoin="round" pathLength="1" class="draw"/>'
-             f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="{T["amber"]}" class="dot"/>'
-             f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="none" stroke="{T["amber"]}" class="ping"/>')
+    b.append(f'<path d="{line} L{cx0 + cw_},{cy0 + ch} L{cx0},{cy0 + ch} Z" fill="url(#area)"/>'
+             f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" stroke-linejoin="round"/>'
+             f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="{T["amber"]}"/>')
+    # crosshair reads the cumulative curve month by month, then rests on today
+    import datetime as _dt
+    end = _dt.date.fromisoformat(p["end"]) if p.get("end") else None
+    idx = [round(k * (len(cum) - 1) / 11) for k in range(12)]
+    labels = [f'{(end - _dt.timedelta(days=len(cum) - 1 - i)).strftime("%d %b").upper() if end else ""} {cum[i]:,}'.strip() for i in idx]
+    xh_svg, xh_css = scrub("xh", [pts[i] for i in idx], labels, cy0 - 6, cy0 + ch, px + pw - 6, dur=17)
+    b.append(xh_svg)
     vy, vh, vmax, bw = cy0 + ch + 8, 26, max(max(year), 1), cw_ / len(year)
     bars = "".join(f'<rect x="{cx0 + i * bw:.2f}" y="{vy + vh - v / vmax * vh:.1f}" width="{max(bw - .3, .6):.2f}" height="{v / vmax * vh:.1f}"/>'
                    for i, v in enumerate(year) if v)
@@ -187,22 +190,15 @@ def hero(p):
     css = f"""
 .tape{{animation:tape linear infinite}}
 @keyframes tape{{to{{transform:translateX(-{seg_w:.1f}px)}}}}
-.ov{{transform-box:fill-box;transform-origin:100% 50%;animation-name:type;animation-fill-mode:both}}
-@keyframes type{{from{{transform:scaleX(1)}}to{{transform:scaleX(0)}}}}
-.cur{{opacity:0;animation:cur 1.05s steps(1) infinite}}
-@keyframes cur{{0%{{opacity:1}}50%{{opacity:0}}}}
-.draw{{animation-duration:2.2s}}
-.fadein{{animation-delay:1.2s}}
-.dot{{animation:fade .3s 2.5s both}}
-.ping{{transform-box:fill-box;transform-origin:center;animation:ping 2s 2.6s ease-out infinite backwards}}
-@keyframes ping{{from{{transform:scale(1);opacity:.9}}to{{transform:scale(3.2);opacity:0}}}}
-@media (prefers-reduced-motion:reduce){{.tape,.ping,.dot{{animation:none}}.ov{{display:none}}.cur{{animation:none;opacity:1}}}}
-""" + odo_css
+.cur{{animation:cur 1.05s steps(1) infinite}}
+@keyframes cur{{50%{{opacity:0}}}}
+@media (prefers-reduced-motion:reduce){{.tape,.cur{{animation:none}}}}
+""" + xh_css
     return svg_doc(W, H, "\n".join(b), f'{p["name"]} — {p["role"].title()}', css)
 
 
 # ================================================================ work cards
-def work_card(r, copy, stars, now, side):
+def work_card(r, copy, stars, now, side, dur=19):
     w, h = W // 2, 214
     inset = (0, 3) if side == 0 else (3, 0)
     lang = (r.get("primaryLanguage") or {}).get("name", "")
@@ -220,21 +216,28 @@ def work_card(r, copy, stars, now, side):
         n = 60
         buckets = [sum(1 for s in stars if s.timestamp() <= t0 + (t1 - t0) * k / (n - 1)) for k in range(n)]
         pts, line = line_path(buckets, cx + 6, cy + 8, cw - 12, ch - 16, lo=0, hi=max(buckets[-1], 1))
-        b.append(f'<path d="{line} L{cx + cw - 6},{cy + ch - 8} L{cx + 6},{cy + ch - 8} Z" fill="{T["amber"]}" fill-opacity=".12" class="fadein"/>'
-                 f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.5" pathLength="1" class="draw"/>'
+        b.append(f'<path d="{line} L{cx + cw - 6},{cy + ch - 8} L{cx + 6},{cy + ch - 8} Z" fill="{T["amber"]}" fill-opacity=".12"/>'
+                 f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.5"/>'
                  f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="2.6" fill="{T["amber"]}"/>'
                  + label(cx + 8, cy + ch + 13, str(stars[0].year), size=9)
                  + label(cx + cw - 2, cy + ch + 13, "NOW", "end", size=9))
+        idx = [round(k * (n - 1) / 7) for k in range(8)]
+        when = [dt.datetime.fromtimestamp(t0 + (t1 - t0) * i / (n - 1), dt.timezone.utc) for i in idx]
+        xh, xh_css = scrub(f"w{side}{len(stars) % 97}", [pts[i] for i in idx],
+                           [f'{d.strftime("%b %y").upper()}  {buckets[i]:,}' for d, i in zip(when, idx)],
+                           cy + 4, cy + ch - 8, cx + cw - 4, dur=dur)
+        b.append(xh)
     else:
+        xh_css = ""
         b.append(label(cx + cw / 2, cy + ch / 2 + 3, "STAR HISTORY BUILDING", "middle"))
     stats = [("STARS", fmt_num(r["stargazerCount"]), T["text"]), ("FORKS", fmt_num(r["forkCount"]), T["text"]),
              ("STARS 12M", f"+{gained}", T["up"] if gained else T["muted"])]
     x = 20
-    css = ""
+    css = xh_css
     for j, (k, v, col) in enumerate(stats):
-        num, kf = odometer(x, h - 10, v, 12.5, col, delay=0.6 + j * .15)
-        b.append(label(x, h - 26, k, size=9) + num)
-        css += kf
+        if j == 0:
+            b.append(flash(f'stars.{r["name"].lower()}', r["stargazerCount"], x - 4, h - 24, text_width(v, 12.5) + 8, 19))
+        b.append(label(x, h - 26, k, size=9) + f'<text x="{x}" y="{h - 10}" class="m b" font-size="12.5" fill="{col}">{esc(v)}</text>')
         x += 92
     b.append(f'<text x="{w - 18}" y="{h - 10}" class="m" font-size="10" fill="{T["muted"]}" text-anchor="end">{esc(r["_ago"])}</text>')
     body = "\n".join(b)
@@ -294,7 +297,7 @@ def risk_monitor(series, crypto, stamp):
     for i, r in enumerate(rows):
         y = 100 + i * 32
         pos = (r["rv20"] - r["lo"]) / ((r["hi"] - r["lo"]) or 1)
-        b.append(f'<g class="rise" style="animation-delay:{i * 70}ms">'
+        b.append('<g>' + flash(f'rv20.{r["sym"]}', round(r["rv20"], 1), 96, y - 15, 58, 21, tol=1.0) +
                  f'<text x="18" y="{y}" class="m b" font-size="13" fill="{T["text"]}">{esc(r["sym"])}</text>'
                  f'<text x="150" y="{y}" class="m" font-size="13" fill="{T["text"]}" text-anchor="end">{r["rv20"]:.1f}%</text>'
                  f'<text x="230" y="{y}" class="m" font-size="13" fill="{T["muted"]}" text-anchor="end">{r["rv60"]:.1f}%</text>'
@@ -315,14 +318,28 @@ def risk_monitor(series, crypto, stamp):
             x, y = hx + j * cs, 86 + i * cs
             txt = "-" if i == j else f"{v:+.2f}"
             fill = T["ink"] if abs(v) >= .6 and i != j else T["text"]
-            b.append(f'<g class="rise" style="animation-delay:{(i + j) * 35}ms"><rect x="{x + 2}" y="{y + 2}" width="{cs - 4}" height="{cs - 4}" rx="4" fill="{col}" fill-opacity="{op:.2f}"/>'
+            b.append(f'<g><rect x="{x + 2}" y="{y + 2}" width="{cs - 4}" height="{cs - 4}" rx="4" fill="{col}" fill-opacity="{op:.2f}"/>'
                      f'<text x="{x + cs / 2:.1f}" y="{y + cs / 2 + 3.5:.1f}" class="m" font-size="{10 if cs >= 38 else 9}" fill="{fill}" text-anchor="middle">{txt}</text></g>')
+    pairs_ij = [(i, j) for i in range(n) for j in range(i + 1, n)]
+    wins = _windows(len(pairs_ij), 0, 100)
+    kf = "".join(f"{a:.2f}%,{bb - .01:.2f}%{{transform:translate({hx + j * cs:.1f}px,{86 + i * cs:.1f}px)}}" for (a, bb), (i, j) in zip(wins, pairs_ij))
+    scan_css = f"@keyframes scan{{{kf}}}\n.scan{{animation:scan {len(pairs_ij) * 1.4:.1f}s steps(1) infinite}}\n"
+    b.append(f'<rect class="scan" x="1" y="1" width="{cs - 2}" height="{cs - 2}" rx="5" fill="none" stroke="{T["text"]}" stroke-width="1.5"/>')
+    for k, ((a, bb), (i, j)) in enumerate(zip(wins, pairs_ij)):
+        scan_css += f"@keyframes rd{k}{{0%,{a - .01:.2f}%{{opacity:0}}{a:.2f}%,{bb - .01:.2f}%{{opacity:1}}{bb:.2f}%,100%{{opacity:0}}}}\n"
+        b.append(f'<text x="{W - 18}" y="{H - 16}" class="m" font-size="10" fill="{T["text"]}" text-anchor="end" '
+                 f'style="opacity:0;animation:rd{k} {len(pairs_ij) * 1.4:.1f}s linear infinite">{syms[i]} x {syms[j]}  '
+                 f'<tspan fill="{T["amber"] if M[i][j] >= 0 else T["cyan"]}">{M[i][j]:+.2f}</tspan></text>')
+    scan_css += "@media (prefers-reduced-motion:reduce){.scan{display:none}}\n"
+    cur, cur_css = row_scan("rk", [(10, 100 + i * 32 - 20, 500, 30) for i in range(len(rows))], 13)
+    b.insert(1, cur)
+    scan_css += cur_css
     crypto_syms = [s for s in syms if s in crypto]
     eq = [s for s in syms if s in ("SPX", "NDX")]
     pairs = [M[syms.index(a)][syms.index(e)] for a in crypto_syms for e in eq]
     note = f"CRYPTO/US EQUITY AVG CORR {sum(pairs) / len(pairs):+.2f}  ·  " if pairs else ""
     b.append(label(18, H - 16, f"{note}SOURCE: YAHOO FINANCE DAILY CLOSES", size=9.5))
-    return svg_doc(W, H, "\n".join(b), "Cross-asset realized volatility and correlation")
+    return svg_doc(W, H, "\n".join(b), "Cross-asset realized volatility and correlation", scan_css)
 
 
 # ================================================================ derivatives
@@ -381,14 +398,30 @@ def derivatives(vol, perps, stamp):
             pts = [(X(d), Y(iv)) for d, iv, _ in curve]
             path = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in pts)
             col = colors.get(name, T["text"])
-            b.append(f'<path d="{path}" fill="none" stroke="{col}" stroke-width="1.8" stroke-linejoin="round" pathLength="1" class="draw"/>')
-            b.append("".join(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.2" fill="{col}" class="fadein"/>' for x, y in pts))
+            b.append(f'<path d="{path}" fill="none" stroke="{col}" stroke-width="1.8" stroke-linejoin="round"/>')
+            b.append("".join(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2.2" fill="{col}"/>' for x, y in pts))
             front = curve[0][1]
             pc = vol[name][1]
             txt = f"{name} {front:.1f}% FRONT" + (f" · P/C OI {pc:.2f}" if pc else "")
             b.append(f'<rect x="{lx}" y="77" width="10" height="3" fill="{col}"/>' + label(lx + 16, 82, txt, fill=col))
             lx += text_width(txt, 9.5) + len(txt) * .8 + 40
+        lead = "BTC" if "BTC" in curves else next(iter(curves))
+        other = next((k for k in curves if k != lead), None)
+
+        def iv_at(curve, d):
+            for (d1, v1, _), (d2, v2, _) in zip(curve, curve[1:]):
+                if d1 <= d <= d2:
+                    return v1 + (v2 - v1) * (d - d1) / ((d2 - d1) or 1)
+            return None
+        pts_lead = [(X(d), Y(iv)) for d, iv, _ in curves[lead]]
+        labels = []
+        for d, iv, _ in curves[lead]:
+            o = iv_at(curves[other], d) if other else None
+            labels.append(f"{d:.0f}D  {lead} {iv:.1f}" + (f"  {other} {o:.1f}" if o is not None else ""))
+        xh, xh_css = scrub("dv", pts_lead, labels, y0 - 6, y0 + ch, x0 + cw + 40, dur=23, color=colors.get(lead))
+        b.append(xh)
     else:
+        xh_css = ""
         b.append(label(x0 + cw / 2, y0 + ch / 2, "OPTIONS FEED UNAVAILABLE THIS HOUR", "middle"))
     # right: perps
     tx = 520
@@ -403,7 +436,7 @@ def derivatives(vol, perps, stamp):
             mark = float(c["markPx"])
             apr = float(c["funding"]) * 24 * 365 * 100
             oi = float(c["openInterest"]) * mark
-            b.append(f'<g class="rise" style="animation-delay:{i * 70}ms">'
+            b.append('<g>' + flash(f"fund.{name}", round(apr, 1), tx + 145, y - 15, 64, 21, tol=1.0) +
                      f'<text x="{tx}" y="{y}" class="m b" font-size="13" fill="{T["text"]}">{esc(name)}</text>'
                      f'<text x="{tx + 130}" y="{y}" class="m" font-size="12.5" fill="{T["text"]}" text-anchor="end">{fmt_price(mark)}</text>'
                      f'<text x="{tx + 205}" y="{y}" class="m" font-size="12.5" fill="{tone(apr)}" text-anchor="end">{signed(apr, 1)}</text>'
@@ -411,7 +444,7 @@ def derivatives(vol, perps, stamp):
     else:
         b.append(label((tx + W - 18) / 2, 160, "PERP FEED UNAVAILABLE THIS HOUR", "middle"))
     b.append(label(18, H - 16, "ATM = STRIKE NEAREST THE FORWARD, CALL/PUT MARK IV AVERAGED · FUNDING ANNUALIZED FROM THE HOURLY RATE", size=9))
-    return svg_doc(W, H, "\n".join(b), "Crypto options term structure and perpetual funding")
+    return svg_doc(W, H, "\n".join(b), "Crypto options term structure and perpetual funding", xh_css)
 
 
 # ================================================================ commit volume profile
@@ -431,7 +464,7 @@ def activity(times):
         v = hours.get(hr, 0)
         bh = v / peak * (ch - 22)
         col = T["amber"] if hr == top else T["up"]
-        b.append(f'<rect class="rise" style="animation-delay:{hr * 25}ms" x="{x0 + hr * bw + 2:.1f}" y="{y0 + ch - bh:.1f}" '
+        b.append(f'<rect x="{x0 + hr * bw + 2:.1f}" y="{y0 + ch - bh:.1f}" '
                  f'width="{bw - 4:.1f}" height="{max(bh, 1):.1f}" rx="1.5" fill="{col}" fill-opacity="{.95 if hr == top else .6}"/>')
         if hr % 3 == 0:
             b.append(label(x0 + hr * bw + bw / 2, y0 + ch + 16, f"{hr:02d}", "middle"))
@@ -443,12 +476,16 @@ def activity(times):
         v = weekdays.get(i, 0)
         b.append(label(wx, y + 9, d, size=10) +
                  f'<rect x="{wx + 36}" y="{y}" width="160" height="11" rx="2" fill="{T["grid"]}"/>'
-                 f'<rect class="rise" style="animation-delay:{i * 50}ms" x="{wx + 36}" y="{y}" width="{max(v / wpeak * 160, 1):.1f}" height="11" rx="2" fill="{T["cyan"]}" fill-opacity=".7"/>'
+                 f'<rect x="{wx + 36}" y="{y}" width="{max(v / wpeak * 160, 1):.1f}" height="11" rx="2" fill="{T["cyan"]}" fill-opacity=".7"/>'
                  + label(W - 24, y + 9, f"{v / total * 100:.0f}%", "end", size=10))
     night = sum(hours.get(hr, 0) for hr in (*range(21, 24), *range(0, 5))) / total * 100
     b.append(f'<text x="{wx}" y="{y0 + ch + 36}" class="m" font-size="10" fill="{T["muted"]}">PEAK <tspan fill="{T["amber"]}">{top:02d}:00</tspan>'
              f'  ·  AFTER-HOURS <tspan fill="{T["amber"]}">{night:.0f}%</tspan></text>')
-    return svg_doc(W, H, "\n".join(b), "Commit volume profile by hour and weekday")
+    tops = [(x0 + hr * bw + bw / 2, y0 + ch - hours.get(hr, 0) / peak * (ch - 22)) for hr in range(24)]
+    xh, xh_css = scrub("ph", tops, [f"{hr:02d}:00  {hours.get(hr, 0)} COMMITS" for hr in range(24)],
+                       y0 + 18, y0 + ch, x0 + cw, dur=29, color=T["text"])
+    b.append(xh)
+    return svg_doc(W, H, "\n".join(b), "Commit volume profile by hour and weekday", xh_css)
 
 
 # ================================================================ regime monitor
@@ -498,11 +535,12 @@ def regime(rows, syms, M, crypto, term, funding):
     for i, (title, value, note, state) in enumerate(tiles):
         x = 18 + i * tw
         alert, watch = state == "ALERT", state == "WATCH"
+        breathe = ' class="breathe"' if alert else ""
         stroke = T["amber"] if alert or watch else T["line"]
         fill = T["amber_dim"] if alert else T["panel"]
         vcol = T["amber"] if alert else T["text"] if state != "OFF" else T["muted"]
-        b.append(f'<g class="rise" style="animation-delay:{150 + i * 90}ms">'
-                 f'<rect x="{x + 3:.1f}" y="46" width="{tw - 6:.1f}" height="66" rx="6" fill="{fill}" stroke="{stroke}" stroke-opacity="{1 if alert else .6 if watch else 1}"/>'
+        b.append(f'<g><rect x="{x + 3:.1f}" y="46" width="{tw - 6:.1f}" height="66" rx="6" fill="{fill}" stroke="{stroke}" '
+                 f'stroke-opacity="{1 if alert else .6 if watch else 1}"{breathe}/>'
                  + label(x + 15, 64, title, size=9)
                  + f'<text x="{x + 15:.1f}" y="86" class="m b" font-size="15" fill="{vcol}">{esc(value)}</text>'
                  + label(x + 15, 102, note, size=8.5, fill=T["amber"] if alert or watch else T["muted"]))
@@ -523,8 +561,8 @@ def _visual_stars(stars, now, x, y, w, h):
     t0, t1, n = stars[0].timestamp(), now.timestamp(), 80
     buckets = [sum(1 for s in stars if s.timestamp() <= t0 + (t1 - t0) * k / (n - 1)) for k in range(n)]
     pts, line = line_path(buckets, x, y, w, h, lo=0, hi=max(buckets[-1], 1))
-    return (f'<path d="{line} L{x + w},{y + h} L{x},{y + h} Z" fill="{T["amber"]}" fill-opacity=".12" class="fadein"/>'
-            f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" pathLength="1" class="draw"/>'
+    return (f'<path d="{line} L{x + w},{y + h} L{x},{y + h} Z" fill="{T["amber"]}" fill-opacity=".12"/>'
+            f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8"/>'
             f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3" fill="{T["amber"]}"/>'
             + label(x, y + h + 16, f"STARS SINCE {stars[0].year}", size=9) + label(x + w, y + h + 16, f"{len(stars)} TODAY", "end", size=9))
 
@@ -559,7 +597,7 @@ def _visual_pipeline(x, y, w, h, steps, caption):
     out += f'<circle cx="{x}" cy="{y + h / 2}" r="3.5" fill="{T["amber"]}" class="pulse" style="--w:{w}px"/>'
     for i, (head, lines) in enumerate(steps):
         bx = x + i * (bw + gap)
-        out += (f'<g class="rise" style="animation-delay:{300 + i * 150}ms"><rect x="{bx:.1f}" y="{y}" width="{bw:.1f}" height="{h}" rx="6" fill="{T["panel"]}" stroke="{T["line"]}"/>'
+        out += (f'<g><rect x="{bx:.1f}" y="{y}" width="{bw:.1f}" height="{h}" rx="6" fill="{T["panel"]}" stroke="{T["line"]}"/>'
                 f'<text x="{bx + 10:.1f}" y="{y + 20}" class="m b" font-size="10" fill="{T["amber"]}">{esc(head)}</text>')
         for j, ln in enumerate(lines):
             out += f'<text x="{bx + 10:.1f}" y="{y + 40 + j * 15}" class="m" font-size="9.5" fill="{T["text"] if j == 0 else T["muted"]}">{esc(ln)}</text>'

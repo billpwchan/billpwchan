@@ -18,23 +18,18 @@ T = dict(bg="#090b0e", panel="#0e1217", line="#1d232c", grid="#161b22", text="#e
 CW = 0.6  # IBM Plex Mono advance width per em
 W = 880   # native width of every card; GitHub scales it to the README column
 
+# Motion language: nothing animates in. Panels are complete at rest; ambient loops read the data
+# (crosshairs, row cursors), alert states breathe, and values that moved since the last render flash once.
 BASE_CSS = """
 .m{font-family:'Plex',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
 .b{font-weight:600}
-.rise{animation:rise .5s ease-out backwards}
-@keyframes rise{from{opacity:0;transform:translateY(5px)}}
-.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.8s .4s cubic-bezier(.4,0,.2,1) forwards}
-@keyframes draw{to{stroke-dashoffset:0}}
-.fadein{animation:fade 1s 1s both}
-@keyframes fade{from{opacity:0}}
 .live{animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
-.boot{animation:on .5s 0s cubic-bezier(.2,.7,.3,1) both}
-@keyframes on{0%{opacity:0}40%{opacity:.35}55%{opacity:.12}100%{opacity:1}}
-.sweep{animation:sweep .7s 0s ease-in both}
-@keyframes sweep{0%{opacity:0;transform:translateY(0)}8%{opacity:.9}100%{opacity:0;transform:translateY(var(--h))}}
-.odo{animation-duration:1.3s;animation-timing-function:cubic-bezier(.15,.8,.25,1);animation-fill-mode:both}
-@media (prefers-reduced-motion:reduce){.rise,.fadein,.live,.boot,.odo{animation:none}.sweep{display:none}.draw{animation:none;stroke-dashoffset:0}}
+.breathe{animation:breathe 3.2s ease-in-out infinite}
+@keyframes breathe{50%{stroke-opacity:.25}}
+.flash{fill-opacity:0;animation:flash 2.6s .8s ease-out both}
+@keyframes flash{0%{fill-opacity:0}12%{fill-opacity:.42}100%{fill-opacity:0}}
+@media (prefers-reduced-motion:reduce){.live,.breathe,.flash{animation:none}}
 """
 
 
@@ -76,8 +71,7 @@ def svg_doc(w, h, body, title, css="", inset=(0, 0)):
     frame = f'<rect x="{l + .5}" y=".5" width="{w - l - r - 1}" height="{h - 1}" rx="10" fill="{T["bg"]}" stroke="{T["line"]}"/>'
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" '
             f'aria-label="{esc(title)}"><title>{esc(title)}</title>\n<style>\n{font_css(body)}{BASE_CSS}{css}\n</style>\n'
-            f'{frame}\n<g class="boot">\n{body}\n</g>\n'
-            f'<rect class="sweep" x="{l + 2}" y="1" width="{w - l - r - 4}" height="2" fill="{T["amber"]}" style="--h:{h - 4}px"/>\n</svg>\n')
+            f"{frame}\n{body}\n</svg>\n")
 
 
 def chip(x, y, label, w=None, size=11.5):
@@ -125,33 +119,64 @@ def fmt_price(p):
     return f"{p:,.0f}" if p >= 10000 else f"{p:,.2f}"
 
 
-def boot(svg, delay):
-    """Shift every animation in a rendered card by `delay` seconds so the page powers on top to bottom."""
-    if not delay:
-        return svg
-
-    def shift(m):
-        v = float(m.group(1)) / (1000 if m.group(2) == "ms" else 1)
-        return f"{v + delay:.2f}s"
-    svg = re.sub(r"(?<=animation-delay:)([\d.]+)(ms|s)", shift, svg)
-    return re.sub(r"(animation:[a-z0-9_-]+ [\d.]+m?s )([\d.]+)(ms|s)", lambda m: m.group(1) + shift(re.match(r"([\d.]+)(ms|s)", m.group(2) + m.group(3))), svg)
+def _windows(n, start, end):
+    """Split [start, end] (percent of the loop) into n equal dwell windows."""
+    step = (end - start) / n
+    return [(start + i * step, start + (i + 1) * step) for i in range(n)]
 
 
-def odometer(x, y, s, size, fill, cls="m b", delay=0.3):
-    """Digits roll up into place like a ticker odometer; non-digits are static. Returns (svg, keyframes css)."""
-    lh = round(size * 1.2, 1)
-    out, css = [], ""
-    for i, ch in enumerate(str(s)):
-        cx = x + i * size * CW
-        if not ch.isdigit():
-            out.append(f'<text x="{cx:.1f}" y="{y}" class="{cls}" font-size="{size}" fill="{fill}">{esc(ch)}</text>')
-            continue
-        d = int(ch)
-        key = f"o{d}_{str(lh).replace('.', '_')}"
-        css += f"@keyframes {key}{{from{{transform:translateY(0)}}to{{transform:translateY(-{d * lh}px)}}}}\n"
-        cid = f"oc{abs(hash((x, y, i, size))) % 10**8}"
-        col = "".join(f'<text x="{cx:.1f}" y="{y + k * lh:.1f}" class="{cls}" font-size="{size}" fill="{fill}">{k}</text>' for k in range(10))
-        out.append(f'<clipPath id="{cid}"><rect x="{cx - 1:.1f}" y="{y - size * .85:.1f}" width="{size * CW + 2:.1f}" height="{size * 1.1:.1f}"/></clipPath>'
-                   f'<g clip-path="url(#{cid})"><g class="odo" transform="translate(0,-{d * lh})" '
-                   f'style="animation-name:{key};animation-delay:{delay + i * .06:.2f}s">{col}</g></g>')
+def scrub(uid, pts, labels, top, bottom, right_edge, dur=16, color=None):
+    """Auto-playing crosshair that reads a chart like a trader would: glides through `pts`,
+    showing each label as it passes, holds on the latest value, fades, repeats."""
+    color = color or T["amber"]
+    n = len(pts)
+    wins = _windows(n, 4, 78)
+    move = "".join(f"{a:.2f}%{{transform:translate({x:.1f}px,0)}}" for (a, _), (x, _) in zip(wins, pts))
+    dot = "".join(f"{a:.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}" for (a, _), (x, y) in zip(wins, pts))
+    css = (f"@keyframes {uid}m{{0%{{transform:translate({pts[0][0]:.1f}px,0)}}{move}100%{{transform:translate({pts[-1][0]:.1f}px,0)}}}}\n"
+           f"@keyframes {uid}d{{0%{{transform:translate({pts[0][0]:.1f}px,{pts[0][1]:.1f}px)}}{dot}100%{{transform:translate({pts[-1][0]:.1f}px,{pts[-1][1]:.1f}px)}}}}\n"
+           f"@keyframes {uid}f{{0%,2%{{opacity:0}}5%,90%{{opacity:1}}96%,100%{{opacity:0}}}}\n"
+           f".{uid}{{animation:{uid}f {dur}s linear infinite}}\n"
+           f".{uid}m{{animation:{uid}m {dur}s linear infinite}}\n.{uid}d{{animation:{uid}d {dur}s linear infinite}}\n")
+    out = [f'<g class="{uid}">',
+           f'<g class="{uid}m"><line x1="0" y1="{top}" x2="0" y2="{bottom}" stroke="{color}" stroke-opacity=".55" stroke-dasharray="2 2"/>']
+    for i, ((a, b), (x, _), lab) in enumerate(zip(wins, pts, labels)):
+        last = i == n - 1
+        end = 92 if last else b
+        css += f"@keyframes {uid}l{i}{{0%,{a - .01:.2f}%{{opacity:0}}{a:.2f}%,{end:.2f}%{{opacity:1}}{end + .01:.2f}%,100%{{opacity:0}}}}\n"
+        w = text_width(lab, 10) + 12
+        lx = 6 if x + 6 + w < right_edge else -6 - w
+        out.append(f'<g style="animation:{uid}l{i} {dur}s linear infinite;opacity:0">'
+                   f'<rect x="{lx:.1f}" y="{top - 2}" width="{w:.1f}" height="17" rx="3" fill="{T["bg"]}" stroke="{color}" stroke-opacity=".7"/>'
+                   f'<text x="{lx + 6:.1f}" y="{top + 10}" class="m" font-size="10" fill="{T["text"]}">{esc(lab)}</text></g>')
+    out.append(f'</g><circle r="3.6" fill="{T["bg"]}" stroke="{color}" stroke-width="2" class="{uid}d"/></g>')
+    css += f"@media (prefers-reduced-motion:reduce){{.{uid}{{display:none}}}}\n"
     return "".join(out), css
+
+
+def row_scan(uid, rects, dur, color=None):
+    """A cursor that steps down a blotter, resting on each row in turn."""
+    color = color or T["amber"]
+    wins = _windows(len(rects), 0, 100)
+    kf = "".join(f"{a:.2f}%,{b - .01:.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}" for (a, b), (x, y, _, _) in zip(wins, rects))
+    w, h = rects[0][2], rects[0][3]
+    css = (f"@keyframes {uid}{{{kf}}}\n.{uid}{{animation:{uid} {dur}s steps(1) infinite}}\n"
+           f"@media (prefers-reduced-motion:reduce){{.{uid}{{display:none}}}}\n")
+    svg = (f'<g class="{uid}"><rect width="{w:.1f}" height="{h:.1f}" rx="4" fill="{color}" fill-opacity=".07"/>'
+           f'<rect width="2" height="{h:.1f}" fill="{color}"/></g>')
+    return svg, css
+
+
+# Values from the previous render (state.json on the output branch) and this one.
+PREV, CURR = {}, {}
+
+
+def flash(key, value, x, y, w, h, tol=0.0):
+    """Record a value; if it moved by more than `tol` since the last render, return a one-shot
+    green/red flash behind it, like a quote cell updating on a terminal."""
+    CURR[key] = value
+    old = PREV.get(key)
+    if old is None or abs(value - old) <= tol:
+        return ""
+    col = T["up"] if value > old else T["down"]
+    return f'<rect class="flash" x="{x:.1f}" y="{y:.1f}" width="{w:.1f}" height="{h:.1f}" rx="3" fill="{col}"/>'
