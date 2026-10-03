@@ -3,7 +3,7 @@ import datetime as dt
 import math
 from collections import Counter
 
-from theme import (CW, T, W, chip, odometer, esc, fmt_num, fmt_price, label, line_path, signed, svg_doc, text_width,
+from theme import (CW, T, W, _windows, chip, odometer, scrub, esc, fmt_num, fmt_price, label, line_path, signed, svg_doc, text_width,
                    title_bar, tone)
 
 
@@ -175,6 +175,13 @@ def hero(p):
              f'<path d="{line}" fill="none" stroke="{T["amber"]}" stroke-width="1.8" stroke-linejoin="round" pathLength="1" class="draw"/>'
              f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="{T["amber"]}" class="dot"/>'
              f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3.2" fill="none" stroke="{T["amber"]}" class="ping"/>')
+    # crosshair reads the cumulative curve month by month, then rests on today
+    import datetime as _dt
+    end = _dt.date.fromisoformat(p["end"]) if p.get("end") else None
+    idx = [round(k * (len(cum) - 1) / 11) for k in range(12)]
+    labels = [f'{(end - _dt.timedelta(days=len(cum) - 1 - i)).strftime("%d %b").upper() if end else ""} {cum[i]:,}'.strip() for i in idx]
+    xh_svg, xh_css = scrub("xh", [pts[i] for i in idx], labels, cy0 - 6, cy0 + ch, px + pw - 6)
+    b.append(xh_svg)
     vy, vh, vmax, bw = cy0 + ch + 8, 26, max(max(year), 1), cw_ / len(year)
     bars = "".join(f'<rect x="{cx0 + i * bw:.2f}" y="{vy + vh - v / vmax * vh:.1f}" width="{max(bw - .3, .6):.2f}" height="{v / vmax * vh:.1f}"/>'
                    for i, v in enumerate(year) if v)
@@ -197,7 +204,7 @@ def hero(p):
 .ping{{transform-box:fill-box;transform-origin:center;animation:ping 2s 2.6s ease-out infinite backwards}}
 @keyframes ping{{from{{transform:scale(1);opacity:.9}}to{{transform:scale(3.2);opacity:0}}}}
 @media (prefers-reduced-motion:reduce){{.tape,.ping,.dot{{animation:none}}.ov{{display:none}}.cur{{animation:none;opacity:1}}}}
-""" + odo_css
+""" + odo_css + xh_css
     return svg_doc(W, H, "\n".join(b), f'{p["name"]} — {p["role"].title()}', css)
 
 
@@ -317,12 +324,23 @@ def risk_monitor(series, crypto, stamp):
             fill = T["ink"] if abs(v) >= .6 and i != j else T["text"]
             b.append(f'<g class="rise" style="animation-delay:{(i + j) * 35}ms"><rect x="{x + 2}" y="{y + 2}" width="{cs - 4}" height="{cs - 4}" rx="4" fill="{col}" fill-opacity="{op:.2f}"/>'
                      f'<text x="{x + cs / 2:.1f}" y="{y + cs / 2 + 3.5:.1f}" class="m" font-size="{10 if cs >= 38 else 9}" fill="{fill}" text-anchor="middle">{txt}</text></g>')
+    pairs_ij = [(i, j) for i in range(n) for j in range(i + 1, n)]
+    wins = _windows(len(pairs_ij), 0, 100)
+    kf = "".join(f"{a:.2f}%,{bb - .01:.2f}%{{transform:translate({hx + j * cs:.1f}px,{86 + i * cs:.1f}px)}}" for (a, bb), (i, j) in zip(wins, pairs_ij))
+    scan_css = f"@keyframes scan{{{kf}}}\n.scan{{animation:scan {len(pairs_ij) * 1.4:.1f}s steps(1) infinite}}\n"
+    b.append(f'<rect class="scan" x="1" y="1" width="{cs - 2}" height="{cs - 2}" rx="5" fill="none" stroke="{T["text"]}" stroke-width="1.5"/>')
+    for k, ((a, bb), (i, j)) in enumerate(zip(wins, pairs_ij)):
+        scan_css += f"@keyframes rd{k}{{0%,{a - .01:.2f}%{{opacity:0}}{a:.2f}%,{bb - .01:.2f}%{{opacity:1}}{bb:.2f}%,100%{{opacity:0}}}}\n"
+        b.append(f'<text x="{W - 18}" y="{H - 16}" class="m" font-size="10" fill="{T["text"]}" text-anchor="end" '
+                 f'style="opacity:0;animation:rd{k} {len(pairs_ij) * 1.4:.1f}s linear infinite">{syms[i]} x {syms[j]}  '
+                 f'<tspan fill="{T["amber"] if M[i][j] >= 0 else T["cyan"]}">{M[i][j]:+.2f}</tspan></text>')
+    scan_css += "@media (prefers-reduced-motion:reduce){.scan{display:none}}\n"
     crypto_syms = [s for s in syms if s in crypto]
     eq = [s for s in syms if s in ("SPX", "NDX")]
     pairs = [M[syms.index(a)][syms.index(e)] for a in crypto_syms for e in eq]
     note = f"CRYPTO/US EQUITY AVG CORR {sum(pairs) / len(pairs):+.2f}  ·  " if pairs else ""
     b.append(label(18, H - 16, f"{note}SOURCE: YAHOO FINANCE DAILY CLOSES", size=9.5))
-    return svg_doc(W, H, "\n".join(b), "Cross-asset realized volatility and correlation")
+    return svg_doc(W, H, "\n".join(b), "Cross-asset realized volatility and correlation", scan_css)
 
 
 # ================================================================ derivatives

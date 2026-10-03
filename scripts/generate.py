@@ -177,7 +177,7 @@ def main():
                  ("STARS", f"{sum(r['stargazerCount'] for r in repos):,}", None, False),
                  ("FORKS", f"{sum(r['forkCount'] for r in repos):,}", None, False)]
         write("hero", cards.hero(dict(PROFILE, stamp=stamp, sessions=sess, tape=tape, year=year,
-                                      total=sum(c for _, c in days), streak=streak(days))))
+                                      total=sum(c for _, c in days), streak=streak(days), end=days[-1][0])))
         for i, (name, copy) in enumerate(WORK.items()):
             if name in by_name:
                 r = dict(by_name[name], _ago=f"UPDATED {ago(data.parse_ts(by_name[name]['pushedAt'])).upper()}")

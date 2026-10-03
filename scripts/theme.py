@@ -155,3 +155,38 @@ def odometer(x, y, s, size, fill, cls="m b", delay=0.3):
                    f'<g clip-path="url(#{cid})"><g class="odo" transform="translate(0,-{d * lh})" '
                    f'style="animation-name:{key};animation-delay:{delay + i * .06:.2f}s">{col}</g></g>')
     return "".join(out), css
+
+
+def _windows(n, start, end):
+    """Split [start, end] (percent of the loop) into n equal dwell windows."""
+    step = (end - start) / n
+    return [(start + i * step, start + (i + 1) * step) for i in range(n)]
+
+
+def scrub(uid, pts, labels, top, bottom, right_edge, dur=16, color=None):
+    """Auto-playing crosshair that reads a chart like a trader would: glides through `pts`,
+    showing each label as it passes, holds on the latest value, fades, repeats."""
+    color = color or T["amber"]
+    n = len(pts)
+    wins = _windows(n, 4, 78)
+    move = "".join(f"{a:.2f}%{{transform:translate({x:.1f}px,0)}}" for (a, _), (x, _) in zip(wins, pts))
+    dot = "".join(f"{a:.2f}%{{transform:translate({x:.1f}px,{y:.1f}px)}}" for (a, _), (x, y) in zip(wins, pts))
+    css = (f"@keyframes {uid}m{{0%{{transform:translate({pts[0][0]:.1f}px,0)}}{move}100%{{transform:translate({pts[-1][0]:.1f}px,0)}}}}\n"
+           f"@keyframes {uid}d{{0%{{transform:translate({pts[0][0]:.1f}px,{pts[0][1]:.1f}px)}}{dot}100%{{transform:translate({pts[-1][0]:.1f}px,{pts[-1][1]:.1f}px)}}}}\n"
+           f"@keyframes {uid}f{{0%,2%{{opacity:0}}5%,90%{{opacity:1}}96%,100%{{opacity:0}}}}\n"
+           f".{uid}{{animation:{uid}f {dur}s linear infinite}}\n"
+           f".{uid}m{{animation:{uid}m {dur}s linear infinite}}\n.{uid}d{{animation:{uid}d {dur}s linear infinite}}\n")
+    out = [f'<g class="{uid}">',
+           f'<g class="{uid}m"><line x1="0" y1="{top}" x2="0" y2="{bottom}" stroke="{color}" stroke-opacity=".55" stroke-dasharray="2 2"/>']
+    for i, ((a, b), (x, _), lab) in enumerate(zip(wins, pts, labels)):
+        last = i == n - 1
+        end = 92 if last else b
+        css += f"@keyframes {uid}l{i}{{0%,{a - .01:.2f}%{{opacity:0}}{a:.2f}%,{end:.2f}%{{opacity:1}}{end + .01:.2f}%,100%{{opacity:0}}}}\n"
+        w = text_width(lab, 10) + 12
+        lx = 6 if x + 6 + w < right_edge else -6 - w
+        out.append(f'<g style="animation:{uid}l{i} {dur}s linear infinite;opacity:0">'
+                   f'<rect x="{lx:.1f}" y="{top - 2}" width="{w:.1f}" height="17" rx="3" fill="{T["bg"]}" stroke="{color}" stroke-opacity=".7"/>'
+                   f'<text x="{lx + 6:.1f}" y="{top + 10}" class="m" font-size="10" fill="{T["text"]}">{esc(lab)}</text></g>')
+    out.append(f'</g><circle r="3.6" fill="{T["bg"]}" stroke="{color}" stroke-width="2" class="{uid}d"/></g>')
+    css += f"@media (prefers-reduced-motion:reduce){{.{uid}{{display:none}}}}\n"
+    return "".join(out), css
