@@ -1,0 +1,19 @@
+{
+"fund.BTC": -1.8,
+"fund.ETH": 4.7,
+"fund.HYPE": -21.8,
+"fund.SOL": 3.4,
+"fund.XRP": 1.6,
+"hero.contrib12m": 4169,
+"rv20.BTC": 45.8,
+"rv20.ETH": 61.4,
+"rv20.GOLD": 37.9,
+"rv20.HSI": 23.0,
+"rv20.NDX": 48.3,
+"rv20.SOL": 67.6,
+"rv20.SPX": 32.5,
+"stars.deeptrust": 22,
+"stars.futu_algo": 631,
+"stars.futu_tick_downloader": 17,
+"stars.strategy_powerbacktest": 13
+}
